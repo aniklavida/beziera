@@ -1,0 +1,31 @@
+# Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Node
+node_modules/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+.npm/
+npm-debug.log*
+
+# Headless browser downloads and artefacts
+.playwright/
+playwright-report/
+test-results/
+
+# Generated screenshots and exports
+*.local.png
+/screenshots/
+/exports/
+
+# Editors and OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
