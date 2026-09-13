@@ -1,4 +1,8 @@
-import { createArtboardElement, positionArtboardElement } from "./artboard.js";
+import {
+  createArtboardElement,
+  positionArtboardElement,
+  reloadArtboardElement,
+} from "./artboard.js";
 
 const viewport = document.getElementById("viewport");
 const world = document.getElementById("world");
@@ -100,10 +104,43 @@ async function loadDesign() {
   return response.json();
 }
 
+/**
+ * Reload only the artboard(s) whose file just changed on disk. A design.json
+ * change re-fetches and reconciles instead — it may have added, moved or
+ * removed artboards, but renderArtboards() only touches what actually
+ * changed, so an unrelated artboard's iframe still never reloads.
+ */
+async function handleChange(change) {
+  if (change.type === "design-changed") {
+    const design = await loadDesign();
+    renderArtboards(design);
+    return;
+  }
+  for (const { el, artboard } of elementsById.values()) {
+    if (artboard.file === change.file) {
+      reloadArtboardElement(el, artboard);
+    }
+  }
+}
+
+function connectSocket() {
+  const socket = new WebSocket(`ws://${location.host}/ws`);
+  socket.addEventListener("message", (event) => {
+    const change = JSON.parse(event.data);
+    handleChange(change).catch((err) => console.error(err));
+  });
+  socket.addEventListener("close", () => {
+    // The canvas server may have restarted; keep trying so hot reload comes
+    // back on its own rather than leaving the page silently stale.
+    setTimeout(connectSocket, 1000);
+  });
+}
+
 async function main() {
   applyTransform();
   const design = await loadDesign();
   renderArtboards(design);
+  connectSocket();
 }
 
 main().catch((err) => {

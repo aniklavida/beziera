@@ -19,10 +19,12 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@beziera/core": "^0.1.0"
+    "@beziera/core": "^0.1.0",
+    "ws": "^8.21.3"
   },
   "devDependencies": {
     "typescript": "^7.0.2",
-    "@types/node": "^22.20.2"
+    "@types/node": "^22.20.2",
+    "@types/ws": "^8.18.1"
   }
 }

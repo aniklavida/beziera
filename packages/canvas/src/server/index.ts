@@ -1,5 +1,6 @@
-import { openDesignFolder } from "@beziera/core";
+import { openDesignFolder, watchDesignFolder } from "@beziera/core";
 import { createCanvasHttpServer } from "./serve.js";
+import { CanvasSocket } from "./socket.js";
 
 export interface CanvasServerHandle {
   readonly url: string;
@@ -11,6 +12,10 @@ const DEFAULT_PORT = 4477;
 /**
  * Start the canvas server for a design folder. Binds to 127.0.0.1 only —
  * the canvas is a local tool, not a hosted one.
+ *
+ * Wires the file watcher straight to the socket: a change on disk becomes a
+ * broadcast, and the one browser-side function that matters
+ * (renderArtboards / reloadArtboardElement) decides what actually reloads.
  */
 export async function startCanvasServer(
   designFolderPath: string,
@@ -18,6 +23,8 @@ export async function startCanvasServer(
 ): Promise<CanvasServerHandle> {
   const folder = await openDesignFolder(designFolderPath);
   const httpServer = createCanvasHttpServer(folder);
+  const socket = new CanvasSocket(httpServer);
+  const watcher = watchDesignFolder(folder, (change) => socket.broadcast(change));
 
   await new Promise<void>((resolve) => httpServer.listen(port, "127.0.0.1", resolve));
 
@@ -28,6 +35,8 @@ export async function startCanvasServer(
   return {
     url,
     async close() {
+      await watcher.close();
+      await socket.close();
       await new Promise<void>((resolve, reject) =>
         httpServer.close((err) => (err ? reject(err) : resolve()))
       );
