@@ -11,6 +11,17 @@
   <div id="world"></div>
 </div>
 <div id="hint">Scroll to pan &middot; Ctrl/Cmd+scroll or pinch to zoom &middot; drag empty space to pan</div>
+<div id="marks-panel">
+  <div id="marks-row">
+    <button id="mark-toggle" type="button">Leave a mark</button>
+    <span id="marks-pending-count"></span>
+  </div>
+  <div id="command-box">
+    <span class="panel-label">Paste this in your agent to act on pending marks</span>
+    <code id="command-text"></code>
+    <button id="command-copy" type="button">Copy</button>
+  </div>
+</div>
 <script type="module" src="/canvas.js"></script>
 </body>
 </html>

@@ -45,12 +45,61 @@ function forbidden(res: ServerResponse): void {
   res.end("Forbidden");
 }
 
+/** Find the id design.json records for a given artboard file, e.g. "artboards/login.html". */
+async function findArtboardIdForFile(
+  folder: DesignFolder,
+  relativeFile: string
+): Promise<string | null> {
+  try {
+    const design = await readDesignJson(folder.designJsonPath);
+    return design.artboards.find((a) => a.file === relativeFile)?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Inject mark-agent.js into an artboard's HTML before its closing </body>
+ * tag (or append it if the document has none), along with one inline line
+ * naming the artboard id. This is the only thing the canvas server changes
+ * about an artboard's own HTML — the injected script runs inside the same
+ * sandboxed iframe as the artboard itself (see artboard.js), so it is bound
+ * by exactly the same "allow-scripts", opaque-origin restrictions.
+ */
+export function injectMarkAgent(html: string, artboardId: string): string {
+  const snippet =
+    `\n<script>window.__BEZIERA_ARTBOARD_ID__=${JSON.stringify(artboardId)};</script>\n` +
+    `<script src="/mark-agent.js"></script>\n`;
+  const closeBodyIndex = html.toLowerCase().lastIndexOf("</body>");
+  if (closeBodyIndex === -1) {
+    return html + snippet;
+  }
+  return html.slice(0, closeBodyIndex) + snippet + html.slice(closeBodyIndex);
+}
+
+async function serveArtboardHtml(
+  res: ServerResponse,
+  filePath: string,
+  artboardId: string
+): Promise<void> {
+  try {
+    const html = await fs.readFile(filePath, "utf8");
+    const withAgent = injectMarkAgent(html, artboardId);
+    res.writeHead(200, { "Content-Type": ARTBOARD_CONTENT_TYPE, "Cache-Control": "no-cache" });
+    res.end(withAgent);
+  } catch {
+    notFound(res);
+  }
+}
+
 /**
  * Create the canvas HTTP server.
  *
  * It serves three things, and nothing else:
  *  - `/api/design`      the current design.json, as JSON
- *  - `/artboards/*`      the design folder's real artboard HTML files
+ *  - `/artboards/*`      the design folder's real artboard HTML files, with
+ *                        mark-agent.js injected so an artboard can be
+ *                        clicked into a mark (see injectMarkAgent below)
  *  - everything else     the canvas UI's static assets (index.html, canvas.js, style.css)
  *
  * The design folder is the only thing on disk this server can reach — every
@@ -87,7 +136,14 @@ export function createCanvasHttpServer(folder: DesignFolder): Server {
         forbidden(res);
         return;
       }
-      await serveFile(res, absolute, ARTBOARD_CONTENT_TYPE);
+      const artboardId = await findArtboardIdForFile(folder, relative);
+      if (artboardId) {
+        await serveArtboardHtml(res, absolute, artboardId);
+      } else {
+        // Not (or no longer) registered in design.json — serve it as-is
+        // rather than guess which artboard a mark on it would belong to.
+        await serveFile(res, absolute, ARTBOARD_CONTENT_TYPE);
+      }
       return;
     }
 

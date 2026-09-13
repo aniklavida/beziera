@@ -90,3 +90,117 @@ body {
   border-radius: 6px;
   pointer-events: none;
 }
+
+#marks-panel {
+  position: fixed;
+  right: 12px;
+  top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font: 12px -apple-system, BlinkMacSystemFont, sans-serif;
+  color: var(--label);
+  max-width: 320px;
+}
+
+#marks-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--label-bg);
+  padding: 8px 10px;
+  border-radius: 6px;
+}
+
+#mark-toggle {
+  font: inherit;
+  padding: 6px 12px;
+  border: 1px solid var(--grid-dot);
+  border-radius: 5px;
+  background: #fff;
+  cursor: pointer;
+}
+
+#mark-toggle.active {
+  background: #6d5efc;
+  color: #fff;
+  border-color: #6d5efc;
+}
+
+#command-box {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--label-bg);
+  padding: 10px;
+  border-radius: 6px;
+}
+
+#command-box .panel-label {
+  font-weight: 600;
+}
+
+#command-text {
+  display: block;
+  white-space: normal;
+  word-break: break-word;
+  background: rgba(0, 0, 0, 0.06);
+  padding: 6px 8px;
+  border-radius: 4px;
+  font: 11px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+#command-copy {
+  align-self: flex-start;
+  font: inherit;
+  padding: 4px 10px;
+  border: 1px solid var(--grid-dot);
+  border-radius: 5px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.mark-popover {
+  position: fixed;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 220px;
+  background: #fff;
+  color: #1a1a1a;
+  border-radius: 8px;
+  padding: 10px;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.25),
+    0 12px 30px rgba(0, 0, 0, 0.18);
+}
+
+.mark-popover-label {
+  font: 11px ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: #6b7280;
+}
+
+.mark-popover textarea {
+  width: 100%;
+  min-height: 60px;
+  resize: vertical;
+  font: 12px -apple-system, BlinkMacSystemFont, sans-serif;
+  padding: 6px;
+  box-sizing: border-box;
+}
+
+.mark-popover-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.mark-popover-actions button {
+  font: 12px -apple-system, BlinkMacSystemFont, sans-serif;
+  padding: 4px 10px;
+  border-radius: 5px;
+  border: 1px solid #d1d5db;
+  background: #f3f4f6;
+  cursor: pointer;
+}

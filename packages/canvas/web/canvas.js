@@ -3,6 +3,8 @@ import {
   positionArtboardElement,
   reloadArtboardElement,
 } from "./artboard.js";
+import { initMarks } from "./marks.js";
+import { initCommandPanel } from "./command.js";
 
 const viewport = document.getElementById("viewport");
 const world = document.getElementById("world");
@@ -20,6 +22,16 @@ function applyTransform() {
 
 function screenToWorld(clientX, clientY) {
   return { x: (clientX - originX) / scale, y: (clientY - originY) / scale };
+}
+
+/** Inverse of screenToWorld — where a world-space point (e.g. a click inside an artboard, translated into artboard-relative + artboard.x/y) lands on screen right now. */
+export function worldToScreen(worldX, worldY) {
+  return { x: originX + worldX * scale, y: originY + worldY * scale };
+}
+
+/** The live artboard-id -> { el, artboard } map, read-only for callers outside this module (marks.js needs it to find an artboard's iframe and canvas position). */
+export function getArtboardEntries() {
+  return elementsById;
 }
 
 function zoomAt(clientX, clientY, factor) {
@@ -116,6 +128,13 @@ async function handleChange(change) {
     renderArtboards(design);
     return;
   }
+  if (change.type === "marks-changed") {
+    // marks.json changed — most often clear_marks, called by the agent on
+    // its own turn. The pending count on the canvas should reflect that
+    // without the user having to reload the page.
+    marks.refreshPendingCount();
+    return;
+  }
   for (const { el, artboard } of elementsById.values()) {
     if (artboard.file === change.file) {
       reloadArtboardElement(el, artboard);
@@ -136,10 +155,14 @@ function connectSocket() {
   });
 }
 
+let marks;
+
 async function main() {
   applyTransform();
   const design = await loadDesign();
   renderArtboards(design);
+  marks = initMarks({ getArtboardEntries, worldToScreen });
+  initCommandPanel();
   connectSocket();
 }
 
