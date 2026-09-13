@@ -13,6 +13,7 @@
   "scripts": {
     "build": "npm run build --workspace=@beziera/core && npm run build --workspace=@beziera/mcp && npm run build --workspace=@beziera/canvas",
     "canvas": "npm run start --workspace=@beziera/canvas",
-    "mcp": "npm run start --workspace=@beziera/mcp"
+    "mcp": "npm run start --workspace=@beziera/mcp",
+    "test": "npm run build && npm run test --workspace=@beziera/core && npm run test --workspace=@beziera/mcp"
   }
 }
