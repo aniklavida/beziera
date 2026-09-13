@@ -6,6 +6,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { openDesignFolder, addMark } from "@beziera/core";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SERVER_ENTRY = path.resolve(__dirname, "server.js");
@@ -40,6 +41,22 @@ async function makeDesignFolder(): Promise<string> {
   return root;
 }
 
+/**
+ * Add a mark to a design folder exactly the way the canvas does (there is
+ * no MCP tool for creating one — get_pending_marks and clear_marks are
+ * this card's whole MCP surface, so a test of them has to seed marks.json
+ * some other way).
+ */
+async function seedMark(root: string, artboardId: string, comment: string): Promise<string> {
+  const folder = await openDesignFolder(root);
+  const mark = await addMark(folder, {
+    artboardId,
+    element: { selector: "body > button#go", tag: "button", id: "go", classes: [], text: "Go" },
+    comment,
+  });
+  return mark.id;
+}
+
 /** Connect a real MCP client to the built server over stdio, for one test. */
 async function withConnectedClient(
   designFolder: string,
@@ -64,13 +81,15 @@ function textOf(result: Awaited<ReturnType<Client["callTool"]>>): string {
   return first.text ?? "";
 }
 
-test("the server lists exactly this card's six tools", async () => {
+test("the server lists all eight tools of the v1 surface", async () => {
   const root = await makeDesignFolder();
   await withConnectedClient(root, async (client) => {
     const { tools } = await client.listTools();
     const names = tools.map((t) => t.name).sort();
     assert.deepEqual(names, [
+      "clear_marks",
       "create_artboard",
+      "get_pending_marks",
       "link_artboards",
       "list_artboards",
       "read_artboard",
@@ -286,4 +305,99 @@ test("screenshot_artboard is fast enough to call every turn, and the server leav
     });
     assert.ok(exitedInTime, "the server process must exit on its own after the client disconnects");
   }
+});
+
+test("get_pending_marks returns an empty queue for a design folder with no marks.json yet", async () => {
+  const root = await makeDesignFolder();
+  await withConnectedClient(root, async (client) => {
+    const result = await client.callTool({ name: "get_pending_marks", arguments: {} });
+    assert.equal(result.isError, undefined);
+    const payload = JSON.parse(textOf(result));
+    assert.deepEqual(payload.marks, []);
+  });
+});
+
+test("get_pending_marks reports marks left on the canvas, with a stable element reference", async () => {
+  const root = await makeDesignFolder();
+  await seedMark(root, "login", "The button is too small");
+
+  await withConnectedClient(root, async (client) => {
+    const result = await client.callTool({ name: "get_pending_marks", arguments: {} });
+    const payload = JSON.parse(textOf(result));
+
+    assert.equal(payload.marks.length, 1);
+    const [mark] = payload.marks;
+    assert.equal(mark.artboardId, "login");
+    assert.equal(mark.comment, "The button is too small");
+    assert.equal(mark.status, "pending");
+    assert.equal(mark.element.selector, "body > button#go");
+    assert.equal(mark.element.tag, "button");
+  });
+});
+
+test("get_pending_marks filters by artboardId when given one", async () => {
+  const root = await makeDesignFolder();
+  await seedMark(root, "login", "On the login screen");
+  await seedMark(root, "dashboard", "On the dashboard");
+
+  await withConnectedClient(root, async (client) => {
+    const result = await client.callTool({
+      name: "get_pending_marks",
+      arguments: { artboardId: "dashboard" },
+    });
+    const payload = JSON.parse(textOf(result));
+    assert.equal(payload.marks.length, 1);
+    assert.equal(payload.marks[0].comment, "On the dashboard");
+  });
+});
+
+test("clear_marks with no ids clears every pending mark, and get_pending_marks confirms it", async () => {
+  const root = await makeDesignFolder();
+  await seedMark(root, "login", "First");
+  await seedMark(root, "login", "Second");
+
+  await withConnectedClient(root, async (client) => {
+    const cleared = await client.callTool({ name: "clear_marks", arguments: {} });
+    assert.equal(cleared.isError, undefined);
+    assert.match(textOf(cleared), /Cleared 2 marks/);
+
+    const after = await client.callTool({ name: "get_pending_marks", arguments: {} });
+    assert.deepEqual(JSON.parse(textOf(after)).marks, []);
+  });
+});
+
+test("clear_marks with a specific id clears only that mark", async () => {
+  const root = await makeDesignFolder();
+  const firstId = await seedMark(root, "login", "First");
+  await seedMark(root, "login", "Second");
+
+  await withConnectedClient(root, async (client) => {
+    const cleared = await client.callTool({ name: "clear_marks", arguments: { ids: [firstId] } });
+    assert.match(textOf(cleared), /Cleared 1 mark\./);
+
+    const after = await client.callTool({ name: "get_pending_marks", arguments: {} });
+    const payload = JSON.parse(textOf(after));
+    assert.equal(payload.marks.length, 1);
+    assert.equal(payload.marks[0].comment, "Second");
+  });
+});
+
+test("the full mark round trip: leave a mark, get it pending, clear it, confirm it is gone", async () => {
+  const root = await makeDesignFolder();
+  const markId = await seedMark(root, "dashboard", "Sidebar overlaps the content on mobile");
+
+  await withConnectedClient(root, async (client) => {
+    const pendingBefore = JSON.parse(
+      textOf(await client.callTool({ name: "get_pending_marks", arguments: {} }))
+    );
+    assert.equal(pendingBefore.marks.length, 1);
+    assert.equal(pendingBefore.marks[0].id, markId);
+
+    await client.callTool({ name: "clear_marks", arguments: { ids: [markId] } });
+
+    const pendingAfter = JSON.parse(
+      textOf(await client.callTool({ name: "get_pending_marks", arguments: {} }))
+    );
+    assert.deepEqual(pendingAfter.marks, []);
+  });
 });
