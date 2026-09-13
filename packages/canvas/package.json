@@ -1,0 +1,28 @@
+{
+  "name": "@beziera/canvas",
+  "version": "0.1.0",
+  "description": "The Beziera web canvas: pan and zoom over artboards rendered in sandboxed iframes from their real HTML files on disk.",
+  "license": "MIT",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "beziera-canvas": "dist/server/index.js"
+  },
+  "files": [
+    "dist",
+    "web"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server/index.js",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@beziera/core": "^0.1.0"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "@types/node": "^22.20.2"
+  }
+}
