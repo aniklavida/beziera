@@ -2,6 +2,8 @@ import path from "node:path";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { openDesignFolder, type DesignFolder } from "@beziera/core";
+import { registerListArtboardsTool } from "./tools/list-artboards.js";
+import { registerReadArtboardTool } from "./tools/read-artboard.js";
 
 /**
  * Build the Beziera MCP server for one design folder.
@@ -10,15 +12,18 @@ import { openDesignFolder, type DesignFolder } from "@beziera/core";
  * the same folder the canvas is pointed at. The design folder is the only
  * channel between the two; nothing here talks to the canvas directly.
  *
- * Tools are registered by later commits: list_artboards and read_artboard
- * first, then write_artboard, create_artboard and link_artboards.
- * screenshot_artboard, get_pending_marks and clear_marks are separate cards.
+ * This commit adds the two read tools. write_artboard, create_artboard and
+ * link_artboards follow in later commits; screenshot_artboard,
+ * get_pending_marks and clear_marks are separate cards.
  */
-export function createBezieraMcpServer(_folder: DesignFolder): McpServer {
+export function createBezieraMcpServer(folder: DesignFolder): McpServer {
   const server = new McpServer({
     name: "beziera",
     version: "0.1.0",
   });
+
+  registerListArtboardsTool(server, folder);
+  registerReadArtboardTool(server, folder);
 
   return server;
 }
