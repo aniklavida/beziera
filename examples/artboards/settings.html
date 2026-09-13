@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Settings — Northstar</title>
+<style>
+  :root {
+    --ink: #1a1d23;
+    --muted: #6b7280;
+    --line: #e5e7eb;
+    --accent: #3454d1;
+    --bg: #f7f7f9;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+  }
+  .screen {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 32px 28px 40px;
+  }
+  .back {
+    display: inline-block;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 13px;
+    margin-bottom: 16px;
+  }
+  h1 {
+    font-size: 20px;
+    margin: 0 0 4px;
+  }
+  .sub {
+    color: var(--muted);
+    font-size: 14px;
+    margin: 0 0 24px;
+  }
+  .panel {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 8px 20px;
+    margin-bottom: 20px;
+  }
+  .row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--line);
+    gap: 16px;
+  }
+  .row:last-child {
+    border-bottom: 0;
+  }
+  .row .label {
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .row .hint {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  input[type="text"],
+  input[type="email"] {
+    width: 200px;
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    font-size: 13px;
+    text-align: right;
+  }
+  .switch {
+    position: relative;
+    width: 38px;
+    height: 22px;
+    border-radius: 999px;
+    background: var(--accent);
+    flex-shrink: 0;
+  }
+  .switch::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #fff;
+  }
+  .switch.off {
+    background: #d1d5db;
+  }
+  .switch.off::after {
+    right: auto;
+    left: 2px;
+  }
+  select {
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    font-size: 13px;
+    background: #fff;
+  }
+  .danger-btn {
+    display: inline-block;
+    padding: 9px 16px;
+    border-radius: 8px;
+    border: 1px solid #f3d3d0;
+    color: #b6362c;
+    background: #fdf2f1;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .signout {
+    display: block;
+    text-align: center;
+    padding: 11px 0;
+    color: var(--muted);
+    font-size: 13px;
+    text-decoration: none;
+  }
+</style>
+</head>
+<body>
+<div class="screen">
+  <a class="back" href="dashboard.html">&larr; Back to dashboard</a>
+  <h1>Account settings</h1>
+  <p class="sub">Manage your profile, notifications and workspace preferences.</p>
+
+  <div class="panel">
+    <div class="row">
+      <div>
+        <div class="label">Name</div>
+      </div>
+      <input type="text" value="Maya Chen" />
+    </div>
+    <div class="row">
+      <div>
+        <div class="label">Email</div>
+        <div class="hint">Used for sign-in and notifications</div>
+      </div>
+      <input type="email" value="maya@northstar.app" />
+    </div>
+    <div class="row">
+      <div>
+        <div class="label">Theme</div>
+      </div>
+      <select>
+        <option>System</option>
+        <option selected>Light</option>
+        <option>Dark</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="row">
+      <div>
+        <div class="label">Email digest</div>
+        <div class="hint">A weekly summary every Monday morning</div>
+      </div>
+      <span class="switch" aria-hidden="true"></span>
+    </div>
+    <div class="row">
+      <div>
+        <div class="label">Task reminders</div>
+        <div class="hint">Ping me an hour before something is due</div>
+      </div>
+      <span class="switch off" aria-hidden="true"></span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="row">
+      <div>
+        <div class="label">Delete workspace</div>
+        <div class="hint">Removes Northstar and every project in it</div>
+      </div>
+      <a class="danger-btn" href="#">Delete&hellip;</a>
+    </div>
+  </div>
+
+  <a class="signout" href="login.html">Sign out</a>
+</div>
+</body>
+</html>

@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sign in — Northstar</title>
+<style>
+  :root {
+    --ink: #1a1d23;
+    --muted: #6b7280;
+    --line: #e5e7eb;
+    --accent: #3454d1;
+    --accent-ink: #ffffff;
+    --bg: #f7f7f9;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+  }
+  .screen {
+    min-height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+  }
+  .card {
+    width: 100%;
+    max-width: 340px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 32px;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+  }
+  .mark {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: var(--accent);
+    margin-bottom: 20px;
+  }
+  h1 {
+    font-size: 20px;
+    margin: 0 0 4px;
+  }
+  .sub {
+    color: var(--muted);
+    font-size: 14px;
+    margin: 0 0 24px;
+  }
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--ink);
+  }
+  .field {
+    margin-bottom: 16px;
+  }
+  input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--ink);
+    background: #fff;
+  }
+  input:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+  .row-between {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    font-size: 13px;
+  }
+  .row-between a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .checkbox {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--muted);
+  }
+  .btn-primary {
+    display: block;
+    width: 100%;
+    text-align: center;
+    padding: 11px 0;
+    background: var(--accent);
+    color: var(--accent-ink);
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    border: 0;
+    transition: background 120ms ease;
+  }
+  .btn-primary:hover {
+    background: #2a44b0;
+  }
+  .foot {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .foot a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+</style>
+</head>
+<body>
+<div class="screen">
+  <form class="card" onsubmit="return false;">
+    <div class="mark" aria-hidden="true"></div>
+    <h1>Sign in to Northstar</h1>
+    <p class="sub">Welcome back — pick up where your team left off.</p>
+
+    <div class="field">
+      <label for="email">Email</label>
+      <input id="email" type="email" value="maya@northstar.app" autocomplete="username" />
+    </div>
+    <div class="field">
+      <label for="password">Password</label>
+      <input id="password" type="password" value="••••••••••" autocomplete="current-password" />
+    </div>
+
+    <div class="row-between">
+      <span class="checkbox"><input type="checkbox" checked style="width:auto" /> Stay signed in</span>
+      <a href="#">Forgot password?</a>
+    </div>
+
+    <!-- A real prototype link: this is the whole mechanism, free of charge. -->
+    <a class="btn-primary" href="dashboard.html">Continue</a>
+
+    <p class="foot">New to Northstar? <a href="#">Create an account</a></p>
+  </form>
+</div>
+</body>
+</html>

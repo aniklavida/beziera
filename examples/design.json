@@ -1,0 +1,33 @@
+{
+  "name": "Northstar — a worked example",
+  "artboards": [
+    {
+      "id": "login",
+      "file": "artboards/login.html",
+      "name": "Sign in",
+      "x": 0,
+      "y": 0,
+      "width": 480,
+      "height": 640
+    },
+    {
+      "id": "dashboard",
+      "file": "artboards/dashboard.html",
+      "name": "Dashboard",
+      "x": 640,
+      "y": -60,
+      "width": 1160,
+      "height": 760
+    },
+    {
+      "id": "settings",
+      "file": "artboards/settings.html",
+      "name": "Settings",
+      "x": 2000,
+      "y": 0,
+      "width": 560,
+      "height": 700
+    }
+  ],
+  "links": []
+}
