@@ -11,7 +11,8 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build --workspace=@beziera/core && npm run build --workspace=@beziera/canvas",
-    "canvas": "npm run start --workspace=@beziera/canvas"
+    "build": "npm run build --workspace=@beziera/core && npm run build --workspace=@beziera/mcp && npm run build --workspace=@beziera/canvas",
+    "canvas": "npm run start --workspace=@beziera/canvas",
+    "mcp": "npm run start --workspace=@beziera/mcp"
   }
 }
