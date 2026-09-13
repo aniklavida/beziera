@@ -64,7 +64,7 @@ function textOf(result: Awaited<ReturnType<Client["callTool"]>>): string {
   return first.text ?? "";
 }
 
-test("the server lists exactly this card's five tools", async () => {
+test("the server lists exactly this card's six tools", async () => {
   const root = await makeDesignFolder();
   await withConnectedClient(root, async (client) => {
     const { tools } = await client.listTools();
@@ -74,6 +74,7 @@ test("the server lists exactly this card's five tools", async () => {
       "link_artboards",
       "list_artboards",
       "read_artboard",
+      "screenshot_artboard",
       "write_artboard",
     ]);
   });
@@ -175,4 +176,114 @@ test("write_artboard and read_artboard reject an unknown id", async () => {
     });
     assert.equal(written.isError, true);
   });
+});
+
+function imageOf(result: Awaited<ReturnType<Client["callTool"]>>): { data: string; mimeType: string } {
+  const image = (result.content as Array<{ type: string; data?: string; mimeType?: string }>).find(
+    (block) => block.type === "image"
+  );
+  assert.ok(image, "expected an image content block");
+  assert.equal(image.mimeType, "image/png");
+  return { data: image.data ?? "", mimeType: image.mimeType ?? "" };
+}
+
+/** Like textOf, but for a tool (e.g. screenshot_artboard) whose text block isn't first. */
+function textBlockOf(result: Awaited<ReturnType<Client["callTool"]>>): string {
+  const text = (result.content as Array<{ type: string; text?: string }>).find(
+    (block) => block.type === "text"
+  );
+  assert.ok(text, "expected a text content block");
+  return text.text ?? "";
+}
+
+test("screenshot_artboard returns a real, correctly sized PNG at the desktop viewport", async () => {
+  const root = await makeDesignFolder();
+  await withConnectedClient(root, async (client) => {
+    const result = await client.callTool({ name: "screenshot_artboard", arguments: { id: "login" } });
+    assert.equal(result.isError, undefined);
+
+    const image = imageOf(result);
+    const png = Buffer.from(image.data, "base64");
+    assert.equal(png.subarray(0, 8).toString("hex"), "89504e470d0a1a0a", "must be a real PNG");
+    assert.ok(png.length > 1_000, `expected a non-trivial image, got ${png.length} bytes`);
+
+    const width = png.readUInt32BE(16);
+    assert.equal(width, 1280, "default viewport is desktop, 1280px wide");
+
+    const summary = textBlockOf(result);
+    assert.match(summary, /desktop viewport: 1280x\d+px/);
+    assert.match(summary, /\d+ms/);
+  });
+});
+
+test("screenshot_artboard honours the mobile viewport", async () => {
+  const root = await makeDesignFolder();
+  await withConnectedClient(root, async (client) => {
+    const result = await client.callTool({
+      name: "screenshot_artboard",
+      arguments: { id: "login", viewport: "mobile" },
+    });
+    assert.equal(result.isError, undefined);
+
+    const png = Buffer.from(imageOf(result).data, "base64");
+    const width = png.readUInt32BE(16);
+    assert.equal(width, 390, "mobile viewport is 390px wide");
+  });
+});
+
+test("screenshot_artboard rejects an unknown artboard id", async () => {
+  const root = await makeDesignFolder();
+  await withConnectedClient(root, async (client) => {
+    const result = await client.callTool({
+      name: "screenshot_artboard",
+      arguments: { id: "nonexistent" },
+    });
+    assert.equal(result.isError, true);
+    assert.match(textOf(result), /Unknown or missing artboard/);
+  });
+});
+
+test("screenshot_artboard is fast enough to call every turn, and the server leaves no process behind", async () => {
+  const root = await makeDesignFolder();
+  const transport = new StdioClientTransport({ command: process.execPath, args: [SERVER_ENTRY, root] });
+  const client = new Client({ name: "beziera-mcp-test-client", version: "0.0.1" });
+  await client.connect(transport);
+
+  const started = Date.now();
+  const result = await client.callTool({ name: "screenshot_artboard", arguments: { id: "dashboard" } });
+  const elapsedMs = Date.now() - started;
+  assert.equal(result.isError, undefined);
+  // Generous bound for a cold-process capture (browser launch included) on
+  // a loaded CI machine — this is the number that matters for the card:
+  // slow enough to skip is the failure mode, not "not literally instant".
+  assert.ok(elapsedMs < 10_000, `cold capture took ${elapsedMs}ms, expected well under 10s`);
+
+  // The MCP SDK's transport type doesn't publish the child process, but the
+  // Node child_process handle is reachable off it for this one check: after
+  // the client closes, the server process must exit on its own rather than
+  // being kept alive by a leaked Chromium child.
+  const childProcess = (transport as unknown as { _process?: { pid?: number } })._process;
+  const pid = childProcess?.pid;
+  await client.close();
+
+  if (pid !== undefined) {
+    const exitedInTime = await new Promise<boolean>((resolve) => {
+      const deadline = Date.now() + 5_000;
+      const poll = (): void => {
+        try {
+          process.kill(pid, 0);
+        } catch {
+          resolve(true);
+          return;
+        }
+        if (Date.now() > deadline) {
+          resolve(false);
+          return;
+        }
+        setTimeout(poll, 100);
+      };
+      poll();
+    });
+    assert.ok(exitedInTime, "the server process must exit on its own after the client disconnects");
+  }
 });
