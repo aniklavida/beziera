@@ -21,9 +21,8 @@ export type ArtboardEntry = z.infer<typeof ArtboardEntrySchema>;
 /**
  * A recorded prototype link between two artboards, by id.
  *
- * Nothing writes to this array yet — `link_artboards` (a later MCP tool) is what
- * populates it. The field exists now because it is part of the locked design.json
- * format, and a format changed later is a migration, not a feature.
+ * `link_artboards` populates this array, and the canvas reads it to draw the
+ * connection between the two artboards it names.
  */
 export const LinkEntrySchema = z.object({
   from: z.string().min(1),
