@@ -48,12 +48,43 @@ body {
   will-change: transform;
 }
 
+/* 1x1 with overflow visible: draws in #world's own coordinate space (the
+   same x/y pixels design.json uses) without needing a viewBox or a size
+   that would have to track the canvas's actual extent. */
+#links-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.link-line {
+  stroke: #6d5efc;
+  stroke-width: 2;
+}
+
+#link-arrow path {
+  fill: #6d5efc;
+}
+
 .artboard {
   position: absolute;
   background: #fff;
   box-shadow:
     0 1px 3px rgba(0, 0, 0, 0.25),
     0 12px 30px rgba(0, 0, 0, 0.12);
+  border-radius: 6px;
+}
+
+/* Clips the iframe to the artboard's rounded corners. This lives on its own
+   wrapper rather than on .artboard itself, so .artboard can stay unclipped
+   for the toolbar, which sits above the box at a negative offset. */
+.artboard-frame {
+  position: absolute;
+  inset: 0;
   border-radius: 6px;
   overflow: hidden;
 }
@@ -66,10 +97,19 @@ body {
   background: #fff;
 }
 
-.artboard .artboard-label {
+.artboard .artboard-toolbar {
   position: absolute;
   top: -28px;
   left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.artboard .artboard-label {
   font-size: 12px;
   color: var(--label);
   background: var(--label-bg);
@@ -77,6 +117,17 @@ body {
   border-radius: 4px;
   white-space: nowrap;
   pointer-events: none;
+}
+
+.artboard .artboard-replay {
+  pointer-events: auto;
+  font: 11px -apple-system, BlinkMacSystemFont, sans-serif;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--grid-dot);
+  background: var(--label-bg);
+  color: var(--label);
+  cursor: pointer;
 }
 
 #hint {

@@ -23,15 +23,43 @@ export function createArtboardElement(artboard) {
   el.dataset.artboardId = artboard.id;
   positionArtboardElement(el, artboard);
 
-  const label = document.createElement("div");
+  const toolbar = document.createElement("div");
+  toolbar.className = "artboard-toolbar";
+
+  const label = document.createElement("span");
   label.className = "artboard-label";
   label.textContent = artboard.name;
-  el.appendChild(label);
+  toolbar.appendChild(label);
 
   const iframe = document.createElement("iframe");
+  iframe.id = `artboard-iframe-${artboard.id}`;
   iframe.setAttribute("sandbox", ARTBOARD_SANDBOX);
   iframe.src = artboardSrc(artboard);
-  el.appendChild(iframe);
+
+  const replayBtn = document.createElement("button");
+  replayBtn.type = "button";
+  replayBtn.className = "artboard-replay";
+  replayBtn.textContent = "Replay";
+  replayBtn.title = "Restart this artboard's CSS animations without reloading it";
+  // preview-agent.js (injected into every artboard's iframe, see
+  // injectPreviewAgent in serve.ts) is the only thing that reads this
+  // message — the same postMessage-only channel mark-agent.js uses, so
+  // this never reaches into the iframe's document.
+  replayBtn.addEventListener("click", () => {
+    iframe.contentWindow?.postMessage({ source: "beziera-canvas", type: "replay-animations" }, "*");
+  });
+  toolbar.appendChild(replayBtn);
+
+  // The iframe's rounded corners come from clipping this wrapper, not
+  // .artboard itself — .artboard has to stay unclipped so the toolbar,
+  // which sits above the box at a negative offset, is not cut off by the
+  // same overflow that shapes the iframe's corners.
+  const frame = document.createElement("div");
+  frame.className = "artboard-frame";
+  frame.appendChild(iframe);
+
+  el.appendChild(toolbar);
+  el.appendChild(frame);
 
   return el;
 }

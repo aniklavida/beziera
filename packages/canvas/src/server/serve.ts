@@ -80,6 +80,23 @@ export function injectMarkAgent(html: string, artboardId: string): string {
   return html.slice(0, closeBodyIndex) + snippet + html.slice(closeBodyIndex);
 }
 
+/**
+ * Inject preview-agent.js the same way injectMarkAgent injects mark-agent.js
+ * — before </body>, or appended if there is none. Kept as its own function
+ * and its own script tag rather than folded into mark-agent.js: marks and
+ * animation replay are two unrelated jobs, and mark-agent.js's existing
+ * tests already pin its exact output, which a second, unrelated concern
+ * would only complicate.
+ */
+export function injectPreviewAgent(html: string): string {
+  const snippet = `\n<script src="/preview-agent.js"></script>\n`;
+  const closeBodyIndex = html.toLowerCase().lastIndexOf("</body>");
+  if (closeBodyIndex === -1) {
+    return html + snippet;
+  }
+  return html.slice(0, closeBodyIndex) + snippet + html.slice(closeBodyIndex);
+}
+
 async function readJsonBody(req: IncomingMessage): Promise<unknown> {
   const chunks: Buffer[] = [];
   for await (const chunk of req) {
@@ -141,9 +158,9 @@ async function serveArtboardHtml(
 ): Promise<void> {
   try {
     const html = await fs.readFile(filePath, "utf8");
-    const withAgent = injectMarkAgent(html, artboardId);
+    const withAgents = injectPreviewAgent(injectMarkAgent(html, artboardId));
     res.writeHead(200, { "Content-Type": ARTBOARD_CONTENT_TYPE, "Cache-Control": "no-cache" });
-    res.end(withAgent);
+    res.end(withAgents);
   } catch {
     notFound(res);
   }
@@ -157,7 +174,9 @@ async function serveArtboardHtml(
  *  - `/api/marks`        GET the current marks.json; POST a new mark from the canvas
  *  - `/artboards/*`      the design folder's real artboard HTML files, with
  *                        mark-agent.js injected so an artboard can be
- *                        clicked into a mark (see injectMarkAgent below)
+ *                        clicked into a mark (see injectMarkAgent below),
+ *                        and preview-agent.js so a "Replay" click can
+ *                        restart its CSS animations (see injectPreviewAgent)
  *  - everything else     the canvas UI's static assets (index.html, canvas.js, style.css)
  *
  * The design folder is the only thing on disk this server can reach — every

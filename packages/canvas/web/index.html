@@ -8,7 +8,16 @@
 </head>
 <body>
 <div id="viewport">
-  <div id="world"></div>
+  <div id="world">
+    <svg id="links-layer">
+      <defs>
+        <marker id="link-arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 Z"></path>
+        </marker>
+      </defs>
+      <g id="links-group"></g>
+    </svg>
+  </div>
 </div>
 <div id="hint">Scroll to pan &middot; Ctrl/Cmd+scroll or pinch to zoom &middot; drag empty space to pan</div>
 <div id="marks-panel">

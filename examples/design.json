@@ -29,5 +29,5 @@
       "height": 700
     }
   ],
-  "links": []
+  "links": [{ "from": "login", "to": "dashboard" }]
 }

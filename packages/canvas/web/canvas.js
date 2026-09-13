@@ -8,6 +8,9 @@ import { initCommandPanel } from "./command.js";
 
 const viewport = document.getElementById("viewport");
 const world = document.getElementById("world");
+const linksGroup = document.getElementById("links-group");
+
+const SVG_NS = "http://www.w3.org/2000/svg";
 
 let scale = 1;
 let originX = 0;
@@ -105,6 +108,42 @@ export function renderArtboards(design) {
       existing.el.remove();
       elementsById.delete(id);
     }
+  }
+  renderLinks(design);
+}
+
+/**
+ * Draw the prototype links design.json records as lines from one artboard's
+ * right edge to another's left edge, in the same world-space coordinates as
+ * the artboards themselves — the SVG lives inside #world, so it pans and
+ * zooms with everything else for free, with no coordinate transform of its
+ * own to keep in sync.
+ *
+ * This is display only. The link itself already works with no help from
+ * this function: an artboard's own `<a href="other.html">` navigates its
+ * iframe regardless of whether design.json ever heard about it. What this
+ * draws is the record link_artboards made, so the user can see the flow
+ * without having to open every artboard and follow its hrefs by hand.
+ */
+function renderLinks(design) {
+  if (!linksGroup) return;
+  linksGroup.replaceChildren();
+  if (!design.links || design.links.length === 0) return;
+
+  const byId = new Map(design.artboards.map((artboard) => [artboard.id, artboard]));
+  for (const link of design.links) {
+    const from = byId.get(link.from);
+    const to = byId.get(link.to);
+    if (!from || !to) continue; // design.json can outlive an artboard it once named
+
+    const line = document.createElementNS(SVG_NS, "line");
+    line.setAttribute("class", "link-line");
+    line.setAttribute("x1", String(from.x + from.width));
+    line.setAttribute("y1", String(from.y + from.height / 2));
+    line.setAttribute("x2", String(to.x));
+    line.setAttribute("y2", String(to.y + to.height / 2));
+    line.setAttribute("marker-end", "url(#link-arrow)");
+    linksGroup.appendChild(line);
   }
 }
 

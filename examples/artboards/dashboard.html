@@ -196,6 +196,27 @@
   .tag.today { background: #fdeceb; color: var(--danger); }
   .tag.soon { background: #fbf1de; color: var(--warn); }
   .tag.done { background: #e8f5ef; color: var(--ok); text-decoration: line-through; }
+  .live {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ok);
+    vertical-align: middle;
+  }
+  .live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--ok);
+    animation: live-pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes live-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.35; transform: scale(0.8); }
+  }
 </style>
 </head>
 <body>
@@ -223,7 +244,7 @@
   <main class="main">
     <div class="main-head">
       <div>
-        <h1>Good morning, Maya</h1>
+        <h1>Good morning, Maya <span class="live" role="status"><span class="live-dot" aria-hidden="true"></span>Live</span></h1>
         <div class="sub">Here's what your team is working on this week.</div>
       </div>
     </div>

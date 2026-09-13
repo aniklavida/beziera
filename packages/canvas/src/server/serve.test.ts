@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import type { AddressInfo } from "node:net";
 import { openDesignFolder } from "@beziera/core";
-import { createCanvasHttpServer, injectMarkAgent } from "./serve.js";
+import { createCanvasHttpServer, injectMarkAgent, injectPreviewAgent } from "./serve.js";
 
 async function makeDesignFolder(): Promise<string> {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "beziera-canvas-test-"));
@@ -64,7 +64,23 @@ test("injectMarkAgent appends the script when the document has no </body>", () =
   assert.ok(injected.startsWith(html));
 });
 
-test("GET /artboards/<file> serves the artboard with the mark agent injected, for a registered artboard", async () => {
+test("injectPreviewAgent inserts the preview agent's script tag before </body>", () => {
+  const html = "<!doctype html><html><body><h1>Hi</h1></body></html>";
+  const injected = injectPreviewAgent(html);
+
+  assert.match(injected, /<script src="\/preview-agent\.js"><\/script>/);
+  assert.ok(injected.indexOf("preview-agent.js") < injected.indexOf("</body>"));
+});
+
+test("injectPreviewAgent appends the script when the document has no </body>", () => {
+  const html = "<div>no real document here</div>";
+  const injected = injectPreviewAgent(html);
+
+  assert.match(injected, /<script src="\/preview-agent\.js">/);
+  assert.ok(injected.startsWith(html));
+});
+
+test("GET /artboards/<file> serves the artboard with both agents injected, for a registered artboard", async () => {
   const root = await makeDesignFolder();
   await withServer(root, async (baseUrl) => {
     const response = await fetch(`${baseUrl}/artboards/login.html`);
@@ -74,6 +90,7 @@ test("GET /artboards/<file> serves the artboard with the mark agent injected, fo
     assert.match(body, /id="go"/); // the artboard's own content is untouched
     assert.match(body, /window\.__BEZIERA_ARTBOARD_ID__="login";/);
     assert.match(body, /<script src="\/mark-agent\.js">/);
+    assert.match(body, /<script src="\/preview-agent\.js">/);
   });
 });
 
