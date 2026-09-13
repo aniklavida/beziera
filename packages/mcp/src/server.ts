@@ -6,6 +6,7 @@ import { registerListArtboardsTool } from "./tools/list-artboards.js";
 import { registerReadArtboardTool } from "./tools/read-artboard.js";
 import { registerWriteArtboardTool } from "./tools/write-artboard.js";
 import { registerCreateArtboardTool } from "./tools/create-artboard.js";
+import { registerLinkArtboardsTool } from "./tools/link-artboards.js";
 
 /**
  * Build the Beziera MCP server for one design folder.
@@ -14,9 +15,9 @@ import { registerCreateArtboardTool } from "./tools/create-artboard.js";
  * the same folder the canvas is pointed at. The design folder is the only
  * channel between the two; nothing here talks to the canvas directly.
  *
- * This commit adds the two write tools. link_artboards follows in the next
- * commit; screenshot_artboard, get_pending_marks and clear_marks are
- * separate cards.
+ * This is the complete surface for this card: list_artboards,
+ * read_artboard, write_artboard, create_artboard and link_artboards.
+ * screenshot_artboard, get_pending_marks and clear_marks are separate cards.
  */
 export function createBezieraMcpServer(folder: DesignFolder): McpServer {
   const server = new McpServer({
@@ -28,6 +29,7 @@ export function createBezieraMcpServer(folder: DesignFolder): McpServer {
   registerReadArtboardTool(server, folder);
   registerWriteArtboardTool(server, folder);
   registerCreateArtboardTool(server, folder);
+  registerLinkArtboardsTool(server, folder);
 
   return server;
 }
