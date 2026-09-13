@@ -8,6 +8,8 @@ import { registerWriteArtboardTool } from "./tools/write-artboard.js";
 import { registerCreateArtboardTool } from "./tools/create-artboard.js";
 import { registerLinkArtboardsTool } from "./tools/link-artboards.js";
 import { registerScreenshotArtboardTool } from "./tools/screenshot-artboard.js";
+import { registerGetPendingMarksTool } from "./tools/get-pending-marks.js";
+import { registerClearMarksTool } from "./tools/clear-marks.js";
 import { closeBrowser } from "./render/browser.js";
 
 /**
@@ -17,9 +19,10 @@ import { closeBrowser } from "./render/browser.js";
  * the same folder the canvas is pointed at. The design folder is the only
  * channel between the two; nothing here talks to the canvas directly.
  *
- * Six tools: list_artboards, read_artboard, write_artboard, create_artboard,
- * link_artboards and screenshot_artboard. get_pending_marks and clear_marks
- * are a separate card.
+ * Eight tools — the complete v1 surface: list_artboards, read_artboard,
+ * write_artboard, create_artboard, link_artboards, screenshot_artboard,
+ * get_pending_marks and clear_marks. There is no tool to create a mark —
+ * a mark always starts as a click on the canvas, not a call from the agent.
  */
 export function createBezieraMcpServer(folder: DesignFolder): McpServer {
   const server = new McpServer({
@@ -33,6 +36,8 @@ export function createBezieraMcpServer(folder: DesignFolder): McpServer {
   registerCreateArtboardTool(server, folder);
   registerLinkArtboardsTool(server, folder);
   registerScreenshotArtboardTool(server, folder);
+  registerGetPendingMarksTool(server, folder);
+  registerClearMarksTool(server, folder);
 
   return server;
 }
