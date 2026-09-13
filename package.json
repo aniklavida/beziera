@@ -1,0 +1,17 @@
+{
+  "name": "beziera",
+  "private": true,
+  "version": "0.1.0",
+  "description": "AI-assisted UI/UX design, prototype and animation platform. HTML-native artboards on a pan/zoom canvas.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "canvas": "npm run start --workspace=@beziera/canvas"
+  }
+}

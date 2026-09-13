@@ -1,0 +1,24 @@
+{
+  "name": "@beziera/core",
+  "version": "0.1.0",
+  "description": "The Beziera design folder: read, write, validate and watch artboards, design.json and marks.json. The only package that touches disk.",
+  "license": "MIT",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "chokidar": "^5.0.0",
+    "zod": "^4.6.4"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "@types/node": "^22.20.2"
+  }
+}
