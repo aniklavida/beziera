@@ -48,13 +48,13 @@ const LOCAL_ONLY_PROTOCOLS = new Set(["file:", "data:", "blob:", "about:"]);
 /**
  * Open a browser context that cannot reach the network.
  *
- * This is a locked decision (DECISIONS.md), not a hardening pass added
- * later: an artboard is arbitrary HTML, usually written by a language
- * model, and it must not be able to phone home while it is captured. The
- * block is enforced here, at the context level, on every request Chromium
- * makes in this context — not by convention, and not by trusting that the
- * HTML happens not to try. `screenshot_artboard` is the only place this
- * product renders an artboard, so this is the only context it ever opens.
+ * The block is a requirement of the feature rather than hardening added on
+ * top of it: an artboard is arbitrary HTML, usually written by a language
+ * model, and it must not be able to phone home while it is captured. It is
+ * enforced here, at the context level, on every request Chromium makes in
+ * this context — not by convention, and not by trusting that the HTML
+ * happens not to try. `screenshot_artboard` is the only place this product
+ * renders an artboard, so this is the only context it ever opens.
  */
 export async function createNetworkBlockedContext(
   browser: Browser,
