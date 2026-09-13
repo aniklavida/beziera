@@ -1,0 +1,8 @@
+---
+description: Beziera design folder — check pending marks every turn, and render/look/fix after writing an artboard
+alwaysApply: true
+---
+
+This design folder's Beziera procedure is **`AGENTS.md`**, at this folder's root — read [`../../AGENTS.md`](../../AGENTS.md) before doing any design work here.
+
+It is not repeated in this file. Checking pending marks at the start of every turn, and rendering a screenshot to look at before reporting an artboard change done, are both instructions in that file, not this one.
