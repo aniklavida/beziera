@@ -5,6 +5,9 @@ import { fileURLToPath } from "node:url";
 import {
   readDesignJson,
   resolveInsideFolder,
+  readMarksJson,
+  addMark,
+  NewMarkSchema,
   type DesignFolder,
 } from "@beziera/core";
 
@@ -77,6 +80,60 @@ export function injectMarkAgent(html: string, artboardId: string): string {
   return html.slice(0, closeBodyIndex) + snippet + html.slice(closeBodyIndex);
 }
 
+async function readJsonBody(req: IncomingMessage): Promise<unknown> {
+  const chunks: Buffer[] = [];
+  for await (const chunk of req) {
+    chunks.push(chunk as Buffer);
+  }
+  const raw = Buffer.concat(chunks).toString("utf8");
+  return raw.length > 0 ? JSON.parse(raw) : {};
+}
+
+/**
+ * GET returns the current marks.json (an empty queue if the file does not
+ * exist yet — readMarksJson already tolerates that). POST appends one new
+ * mark, which is how the canvas turns a click-and-comment into a row in
+ * marks.json; there is no MCP tool for creating a mark, only for reading
+ * and clearing one, since a mark always starts as a click on the canvas.
+ */
+async function handleMarksRoute(
+  req: IncomingMessage,
+  res: ServerResponse,
+  folder: DesignFolder
+): Promise<void> {
+  if (req.method === "GET") {
+    try {
+      const marksFile = await readMarksJson(folder.marksJsonPath);
+      res.writeHead(200, {
+        "Content-Type": "application/json; charset=utf-8",
+        "Cache-Control": "no-cache",
+      });
+      res.end(JSON.stringify(marksFile));
+    } catch (err) {
+      res.writeHead(500, { "Content-Type": "text/plain; charset=utf-8" });
+      res.end(`Failed to read marks.json: ${(err as Error).message}`);
+    }
+    return;
+  }
+
+  if (req.method === "POST") {
+    try {
+      const body = await readJsonBody(req);
+      const input = NewMarkSchema.parse(body);
+      const mark = await addMark(folder, input);
+      res.writeHead(201, { "Content-Type": "application/json; charset=utf-8" });
+      res.end(JSON.stringify(mark));
+    } catch (err) {
+      res.writeHead(400, { "Content-Type": "text/plain; charset=utf-8" });
+      res.end(`Invalid mark: ${(err as Error).message}`);
+    }
+    return;
+  }
+
+  res.writeHead(405, { "Content-Type": "text/plain; charset=utf-8", Allow: "GET, POST" });
+  res.end("Method not allowed");
+}
+
 async function serveArtboardHtml(
   res: ServerResponse,
   filePath: string,
@@ -95,8 +152,9 @@ async function serveArtboardHtml(
 /**
  * Create the canvas HTTP server.
  *
- * It serves three things, and nothing else:
+ * It serves four things, and nothing else:
  *  - `/api/design`      the current design.json, as JSON
+ *  - `/api/marks`        GET the current marks.json; POST a new mark from the canvas
  *  - `/artboards/*`      the design folder's real artboard HTML files, with
  *                        mark-agent.js injected so an artboard can be
  *                        clicked into a mark (see injectMarkAgent below)
@@ -124,6 +182,11 @@ export function createCanvasHttpServer(folder: DesignFolder): Server {
         res.writeHead(500, { "Content-Type": "text/plain; charset=utf-8" });
         res.end(`Failed to read design.json: ${(err as Error).message}`);
       }
+      return;
+    }
+
+    if (pathname === "/api/marks") {
+      await handleMarksRoute(req, res, folder);
       return;
     }
 

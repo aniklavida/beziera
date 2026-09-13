@@ -5,6 +5,7 @@ import { DesignFolderError } from "./errors.js";
 
 export const ARTBOARDS_DIRNAME = "artboards";
 export const DESIGN_JSON_FILENAME = "design.json";
+export const MARKS_JSON_FILENAME = "marks.json";
 
 /** An opened, validated design folder: a real directory holding artboards/ and design.json. */
 export interface DesignFolder {
@@ -12,6 +13,13 @@ export interface DesignFolder {
   readonly root: string;
   readonly artboardsDir: string;
   readonly designJsonPath: string;
+  /**
+   * Path to marks.json — never validated to exist by openDesignFolder,
+   * unlike design.json. A design folder with no feedback yet simply has no
+   * marks.json; readMarksJson treats a missing file as an empty queue
+   * rather than an error, and the first mark left on the canvas creates it.
+   */
+  readonly marksJsonPath: string;
 }
 
 /**
@@ -40,7 +48,9 @@ export async function openDesignFolder(folderPath: string): Promise<DesignFolder
   const designJsonPath = path.join(root, DESIGN_JSON_FILENAME);
   await readDesignJson(designJsonPath); // throws if missing or invalid
 
-  return { root, artboardsDir, designJsonPath };
+  const marksJsonPath = path.join(root, MARKS_JSON_FILENAME);
+
+  return { root, artboardsDir, designJsonPath, marksJsonPath };
 }
 
 /**

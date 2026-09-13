@@ -5,6 +5,7 @@ import type { DesignFolder } from "../design/folder.js";
 /** One thing that changed in a design folder, ready to hand to a canvas socket broadcast. */
 export type DesignFolderChange =
   | { type: "design-changed" }
+  | { type: "marks-changed" }
   | { type: "artboard-changed"; file: string };
 
 export type DesignFolderChangeListener = (change: DesignFolderChange) => void;
@@ -21,14 +22,22 @@ export function watchDesignFolder(
   folder: DesignFolder,
   onChange: DesignFolderChangeListener
 ): FSWatcher {
-  const watcher = chokidar.watch([folder.artboardsDir, folder.designJsonPath], {
-    ignoreInitial: true,
-    awaitWriteFinish: { stabilityThreshold: 100, pollInterval: 20 },
-  });
+  const watcher = chokidar.watch(
+    [folder.artboardsDir, folder.designJsonPath, folder.marksJsonPath],
+    {
+      ignoreInitial: true,
+      awaitWriteFinish: { stabilityThreshold: 100, pollInterval: 20 },
+    }
+  );
 
   const handleFileEvent = (filePath: string): void => {
-    if (path.resolve(filePath) === path.resolve(folder.designJsonPath)) {
+    const resolved = path.resolve(filePath);
+    if (resolved === path.resolve(folder.designJsonPath)) {
       onChange({ type: "design-changed" });
+      return;
+    }
+    if (resolved === path.resolve(folder.marksJsonPath)) {
+      onChange({ type: "marks-changed" });
       return;
     }
     const relative = path.relative(folder.root, filePath).split(path.sep).join("/");
