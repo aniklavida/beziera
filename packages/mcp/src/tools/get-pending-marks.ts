@@ -9,9 +9,10 @@ import { getPendingMarks, type DesignFolder } from "@beziera/core";
  * There is no sampling in Claude Code (anthropics/claude-code#1785, still
  * open) and support is uneven across MCP clients generally, so the canvas
  * cannot push a mark to the agent — nothing calls this tool automatically.
- * Until the bundled skill exists to call it at the start of every turn
- * (a later card), calling it is something a human has to ask for, whether
- * directly or by pasting the command the canvas displays.
+ * The bundled skill is what makes the call routine, by instructing the
+ * agent to check marks at the start of every turn; absent that instruction,
+ * calling it is something a human has to ask for, whether directly or by
+ * pasting the command the canvas displays.
  */
 export function registerGetPendingMarksTool(server: McpServer, folder: DesignFolder): void {
   server.registerTool(

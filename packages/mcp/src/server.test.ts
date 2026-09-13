@@ -43,8 +43,8 @@ async function makeDesignFolder(): Promise<string> {
 
 /**
  * Add a mark to a design folder exactly the way the canvas does (there is
- * no MCP tool for creating one — get_pending_marks and clear_marks are
- * this card's whole MCP surface, so a test of them has to seed marks.json
+ * no MCP tool for creating one — get_pending_marks and clear_marks are the
+ * whole MCP surface for marks, so a test of them has to seed marks.json
  * some other way).
  */
 async function seedMark(root: string, artboardId: string, comment: string): Promise<string> {
@@ -273,8 +273,8 @@ test("screenshot_artboard is fast enough to call every turn, and the server leav
   const elapsedMs = Date.now() - started;
   assert.equal(result.isError, undefined);
   // Generous bound for a cold-process capture (browser launch included) on
-  // a loaded CI machine — this is the number that matters for the card:
-  // slow enough to skip is the failure mode, not "not literally instant".
+  // a loaded CI machine — this is the number that matters: slow enough to
+  // skip is the failure mode, not "not literally instant".
   assert.ok(elapsedMs < 10_000, `cold capture took ${elapsedMs}ms, expected well under 10s`);
 
   // The MCP SDK's transport type doesn't publish the child process, but the

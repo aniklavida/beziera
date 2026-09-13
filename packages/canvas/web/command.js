@@ -2,10 +2,9 @@
 //
 // Claude Code does not support MCP sampling (anthropics/claude-code#1785),
 // so this canvas has no way to push a mark to the user's agent — the agent
-// pulls, and the user triggers it. Until the bundled skill exists (a later
-// card) to check marks automatically, this text is the whole softener on
-// the canvas side: the user should never have to compose the sentence that
-// tells their agent to look at its marks, only paste one.
+// pulls, and the user triggers it. This text is the softener on the canvas
+// side: the user should never have to compose the sentence that tells their
+// agent to look at its marks, only paste one.
 const PASTE_COMMAND =
   "Check Beziera's pending design marks: call get_pending_marks, address each one, take a " +
   "screenshot to confirm the fix, then call clear_marks.";
