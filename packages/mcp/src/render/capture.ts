@@ -17,9 +17,50 @@ export const VIEWPORTS = {
 
 export type ViewportName = keyof typeof VIEWPORTS;
 
+/**
+ * How long a single capture may run before it is abandoned. An artboard is
+ * arbitrary HTML and script; nothing about the render path — waiting for
+ * `load`, for `document.fonts.ready`, for the next animation frame, for the
+ * screenshot itself — has its own bound once the page is capable of running
+ * forever (a busy loop, a `document.fonts` getter that never settles, an
+ * event that never fires). Fifteen seconds is generous next to a warm
+ * capture's actual time (well under 3s, see capture.test.ts) and still
+ * short enough that one bad artboard cannot hang the tool an agent is meant
+ * to call every turn.
+ */
+export const DEFAULT_CAPTURE_TIMEOUT_MS = 15_000;
+
 export interface CaptureOptions {
   /** Which declared viewport to render at. Defaults to "desktop". */
   viewport?: ViewportName;
+  /**
+   * Override for how long this capture may run before it is abandoned.
+   * Exists so tests can prove the timeout fires without actually waiting
+   * out the real default; production code should leave this unset.
+   */
+  timeoutMs?: number;
+}
+
+/**
+ * Race a promise against a deadline, without leaving the loser as an
+ * unhandled rejection: if the underlying operation later settles anyway (a
+ * page.evaluate that only resolves once the browser context is torn down),
+ * something has already observed it.
+ */
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(message)), timeoutMs);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (err) => {
+        clearTimeout(timer);
+        reject(err instanceof Error ? err : new Error(String(err)));
+      }
+    );
+  });
 }
 
 export interface CaptureResult {
@@ -52,20 +93,26 @@ export async function captureHtmlFile(
   const viewport = VIEWPORTS[options.viewport ?? "desktop"];
   const startedAt = performance.now();
 
+  const timeoutMs = options.timeoutMs ?? DEFAULT_CAPTURE_TIMEOUT_MS;
   const fileUrl = pathToFileURL(absoluteHtmlPath).href;
   const context = await createNetworkBlockedContext(browser, { viewport }, fileUrl);
   try {
     const page = await context.newPage();
-    await page.goto(fileUrl, { waitUntil: "load" });
-    // Evaluated as page-context JavaScript, not type-checked against Node's
-    // lib — this package has no DOM lib configured, and adding one would
-    // leak browser globals into every other module in it.
-    await page.evaluate("document.fonts.ready");
-    await page.evaluate(
-      "new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))"
+    const png = await withTimeout(
+      (async () => {
+        await page.goto(fileUrl, { waitUntil: "load" });
+        // Evaluated as page-context JavaScript, not type-checked against
+        // Node's lib — this package has no DOM lib configured, and adding
+        // one would leak browser globals into every other module in it.
+        await page.evaluate("document.fonts.ready");
+        await page.evaluate(
+          "new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))"
+        );
+        return page.screenshot({ type: "png", fullPage: true });
+      })(),
+      timeoutMs,
+      `screenshot_artboard timed out after ${timeoutMs}ms — the artboard never finished rendering`
     );
-
-    const png = await page.screenshot({ type: "png", fullPage: true });
     const dimensions = readPngDimensions(png);
 
     return {

@@ -237,3 +237,27 @@ test("an artboard cannot open a WebSocket during capture — proven, not assumed
     server.close();
   }
 });
+
+test("a capture that never settles is abandoned rather than hanging forever — proven, not assumed", async () => {
+  // document.fonts.ready is the exact promise captureHtmlFile awaits after
+  // load; replacing it with one that never resolves reproduces a page that
+  // never finishes rendering without needing an actual busy loop (which
+  // would also block the very script this artboard's document.fonts getter
+  // runs in, and — being synchronous — would fight the test for CPU).
+  const html = `<!doctype html><html><head><script>
+    Object.defineProperty(document, "fonts", { get: () => ({ ready: new Promise(() => {}) }) });
+  </script></head><body>never settles</body></html>`;
+  const file = await writeTempHtml(html);
+
+  const startedAt = Date.now();
+  await assert.rejects(
+    captureHtmlFile(browser, file, { timeoutMs: 500 }),
+    /timed out/i,
+    "a page that never finishes rendering must reject rather than hang the capture forever"
+  );
+  const elapsedMs = Date.now() - startedAt;
+  assert.ok(
+    elapsedMs < 5_000,
+    `expected the capture to give up close to its 500ms timeout, took ${elapsedMs}ms`
+  );
+});
