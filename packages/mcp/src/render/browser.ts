@@ -57,32 +57,53 @@ export async function closeBrowser(): Promise<void> {
 }
 
 /**
- * URL schemes a captured artboard may load without leaving the machine:
- * the file itself, data/blob URIs it constructs in memory, and the blank
- * page Chromium starts a context on. Every other scheme — http, https, ws,
- * wss, and anything else — is a network request and is refused.
+ * URL schemes a captured artboard may load without leaving the machine: the
+ * data/blob URIs it constructs in memory, and the blank page Chromium starts
+ * a context on. `file:` is handled separately, below — it is local, but not
+ * every local file is this artboard's own. Every other scheme — http,
+ * https, ws, wss, and anything else — is a network request and is refused.
  */
-const LOCAL_ONLY_PROTOCOLS = new Set(["file:", "data:", "blob:", "about:"]);
+const LOCAL_ONLY_PROTOCOLS = new Set(["data:", "blob:", "about:"]);
 
 /**
- * Open a browser context that cannot reach the network.
+ * Open a browser context that cannot reach the network, and can read exactly
+ * one local file: the artboard being captured.
  *
- * The block is a requirement of the feature rather than hardening added on
- * top of it: an artboard is arbitrary HTML, usually written by a language
- * model, and it must not be able to phone home while it is captured. It is
- * enforced here, at the context level, on every request Chromium makes in
- * this context — not by convention, and not by trusting that the HTML
- * happens not to try. `screenshot_artboard` is the only place this product
- * renders an artboard, so this is the only context it ever opens.
+ * The network block is a requirement of the feature rather than hardening
+ * added on top of it: an artboard is arbitrary HTML, usually written by a
+ * language model, and it must not be able to phone home while it is
+ * captured. It is enforced here, at the context level, on every request
+ * Chromium makes in this context — not by convention, and not by trusting
+ * that the HTML happens not to try. `screenshot_artboard` is the only place
+ * this product renders an artboard, so this is the only context it ever
+ * opens.
+ *
+ * `allowedFileUrl` is the one `file:` URL this context may load — the
+ * artboard's own HTML file, navigated to once by `captureHtmlFile`. Without
+ * it, an artboard could still read any other file the server process can
+ * see (an SSH key, another user's design folder, `/etc/passwd`) through a
+ * plain `<img>`, `<iframe>` or `fetch()` pointed at a `file://` URL, and have
+ * its contents rendered straight into the screenshot handed back to the
+ * agent. Blocking `file:` outright is not an option — the artboard's own
+ * document has to load the same way — so the one URL actually being
+ * captured is the only `file:` request this context ever allows through.
  */
 export async function createNetworkBlockedContext(
   browser: Browser,
-  options: Parameters<Browser["newContext"]>[0] = {}
+  options: Parameters<Browser["newContext"]>[0] = {},
+  allowedFileUrl?: string
 ): Promise<BrowserContext> {
+  const allowedFilePath = allowedFileUrl ? new URL(allowedFileUrl).pathname : null;
   const context = await browser.newContext(options);
   await context.route("**/*", (route) => {
     const url = new URL(route.request().url());
-    if (LOCAL_ONLY_PROTOCOLS.has(url.protocol)) {
+    if (url.protocol === "file:") {
+      if (allowedFilePath !== null && url.pathname === allowedFilePath) {
+        void route.continue();
+      } else {
+        void route.abort("blockedbyclient");
+      }
+    } else if (LOCAL_ONLY_PROTOCOLS.has(url.protocol)) {
       void route.continue();
     } else {
       void route.abort("blockedbyclient");

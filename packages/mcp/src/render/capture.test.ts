@@ -111,14 +111,15 @@ test("an artboard cannot reach the network during capture — proven, not assume
       </script>
     </body></html>`;
     const file = await writeTempHtml(html);
+    const fileUrl = `file://${file}`;
 
     // Exercised through the exact primitive captureHtmlFile uses — a
     // network-blocked context — rather than a hand-rolled one, so this test
     // proves what a real screenshot_artboard call does, not a lookalike.
-    const context = await createNetworkBlockedContext(browser, { viewport: VIEWPORTS.desktop });
+    const context = await createNetworkBlockedContext(browser, { viewport: VIEWPORTS.desktop }, fileUrl);
     try {
       const page = await context.newPage();
-      await page.goto(`file://${file}`, { waitUntil: "load" });
+      await page.goto(fileUrl, { waitUntil: "load" });
       const png = await page.screenshot({ type: "png" });
       assert.ok(png.length > 0, "the page must still render even though its network calls fail");
 
@@ -133,5 +134,45 @@ test("an artboard cannot reach the network during capture — proven, not assume
     assert.equal(requestsReceived, 0, "the local probe server must never have been contacted");
   } finally {
     server.close();
+  }
+});
+
+// A real, valid 1x1 PNG — not just any file. An <img> pointed at a blocked
+// URL and an <img> pointed at a file with content it cannot decode both
+// fire onerror, so proving the block needs a file the browser could
+// genuinely render if the request went through; only then does onload vs.
+// onerror actually distinguish "reached the file" from "never asked".
+const VALID_PNG_1X1 = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
+  "base64"
+);
+
+test("an artboard cannot read a local file other than itself during capture — proven, not assumed", async () => {
+  const secretDir = await fs.mkdtemp(path.join(os.tmpdir(), "beziera-capture-secret-"));
+  const secretFile = path.join(secretDir, "not-the-artboard.png");
+  await fs.writeFile(secretFile, VALID_PNG_1X1);
+  const secretFileUrl = `file://${secretFile}`;
+
+  const html = `<!doctype html><html><body>
+    <img src="${secretFileUrl}" onerror="window.__secretFailed = true" onload="window.__secretLoaded = true" />
+  </body></html>`;
+  const file = await writeTempHtml(html);
+  const fileUrl = `file://${file}`;
+
+  // Same primitive as the network test above: the exact context
+  // captureHtmlFile opens, with the artboard's own file as the only file:
+  // URL it declares allowed — not the second, unrelated local file the
+  // artboard's own HTML points at.
+  const context = await createNetworkBlockedContext(browser, { viewport: VIEWPORTS.desktop }, fileUrl);
+  try {
+    const page = await context.newPage();
+    await page.goto(fileUrl, { waitUntil: "load" });
+
+    const secretLoaded = await page.evaluate("window.__secretLoaded === true");
+    const secretFailed = await page.evaluate("window.__secretFailed === true");
+    assert.equal(secretLoaded, false, "a file other than the artboard being captured must never load");
+    assert.equal(secretFailed, true, "the <img> pointed at another local file must fail, not silently succeed");
+  } finally {
+    await context.close();
   }
 });

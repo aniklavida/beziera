@@ -52,10 +52,10 @@ export async function captureHtmlFile(
   const viewport = VIEWPORTS[options.viewport ?? "desktop"];
   const startedAt = performance.now();
 
-  const context = await createNetworkBlockedContext(browser, { viewport });
+  const fileUrl = pathToFileURL(absoluteHtmlPath).href;
+  const context = await createNetworkBlockedContext(browser, { viewport }, fileUrl);
   try {
     const page = await context.newPage();
-    const fileUrl = pathToFileURL(absoluteHtmlPath).href;
     await page.goto(fileUrl, { waitUntil: "load" });
     // Evaluated as page-context JavaScript, not type-checked against Node's
     // lib — this package has no DOM lib configured, and adding one would
