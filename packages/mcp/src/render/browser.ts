@@ -10,10 +10,29 @@ import { chromium, type Browser, type BrowserContext } from "playwright";
  */
 let browserPromise: Promise<Browser> | null = null;
 
+/**
+ * Launch options for the one Chromium instance this server ever starts.
+ * Exported so a test can launch the exact same configuration and prove what
+ * it actually asked for, rather than a hand-copied duplicate that could
+ * drift from what `getBrowser` really uses.
+ *
+ * `chromiumSandbox: true` keeps Chromium's own OS-level process sandbox on.
+ * Playwright's default is the opposite — unless this is set, it launches
+ * with `--no-sandbox`, which hands every renderer process (the one that
+ * parses and runs an artboard's HTML and script) the same privileges as
+ * whatever user is running this server. An artboard is untrusted,
+ * model-written HTML; it must run inside Chromium's own sandbox like any
+ * other untrusted web content, not next to it.
+ */
+export const CHROMIUM_LAUNCH_OPTIONS: Parameters<typeof chromium.launch>[0] = {
+  headless: true,
+  chromiumSandbox: true,
+};
+
 /** Get the shared browser, launching it if this is the first call. */
 export function getBrowser(): Promise<Browser> {
   if (!browserPromise) {
-    browserPromise = chromium.launch({ headless: true });
+    browserPromise = chromium.launch(CHROMIUM_LAUNCH_OPTIONS);
   }
   return browserPromise;
 }
