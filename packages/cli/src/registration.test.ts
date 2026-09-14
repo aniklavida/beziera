@@ -7,7 +7,7 @@ import {
   formatRegistrationMessage,
 } from "./registration.js";
 
-const FOLDER = "/home/user/my-design";
+const FOLDER = "/srv/my-design";
 
 test("mcpLaunchArgs names the package and bin explicitly, not a bare npx guess", () => {
   const args = mcpLaunchArgs(FOLDER);
