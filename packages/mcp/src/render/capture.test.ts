@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { promises as fs } from "node:fs";
 import http from "node:http";
+import net from "node:net";
 import os from "node:os";
 import path from "node:path";
 import { chromium, type Browser } from "playwright";
@@ -174,5 +175,65 @@ test("an artboard cannot read a local file other than itself during capture — 
     assert.equal(secretFailed, true, "the <img> pointed at another local file must fail, not silently succeed");
   } finally {
     await context.close();
+  }
+});
+
+test("an artboard cannot open a WebSocket during capture — proven, not assumed", async () => {
+  // A raw TCP server, not a WebSocket one: the thing under test is whether
+  // Chromium ever dials out at all, which a plain TCP accept proves — a
+  // real WebSocket server would still have to accept the same underlying
+  // connection before it could reject the handshake, so this is strictly
+  // earlier and cannot be fooled by protocol-level details.
+  let connectionsReceived = 0;
+  const server = net.createServer((socket) => {
+    connectionsReceived++;
+    socket.destroy();
+  });
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const address = server.address();
+  if (address === null || typeof address === "string") {
+    throw new Error("expected the test server to bind a port");
+  }
+  const port = address.port;
+
+  try {
+    const html = `<!doctype html><html><body>
+      <script>
+        window.__wsResult = "pending";
+        try {
+          const socket = new WebSocket("ws://127.0.0.1:${port}/");
+          socket.onopen = () => { window.__wsResult = "opened"; };
+          socket.onerror = () => { window.__wsResult = "error"; };
+          socket.onclose = () => {
+            if (window.__wsResult === "pending") window.__wsResult = "closed";
+          };
+        } catch (err) {
+          window.__wsResult = "threw";
+        }
+      </script>
+    </body></html>`;
+    const file = await writeTempHtml(html);
+    const fileUrl = `file://${file}`;
+
+    const context = await createNetworkBlockedContext(browser, { viewport: VIEWPORTS.desktop }, fileUrl);
+    try {
+      const page = await context.newPage();
+      await page.goto(fileUrl, { waitUntil: "load" });
+
+      const deadline = Date.now() + 2_000;
+      let wsResult = await page.evaluate("window.__wsResult");
+      while (wsResult === "pending" && Date.now() < deadline) {
+        await page.waitForTimeout(20);
+        wsResult = await page.evaluate("window.__wsResult");
+      }
+
+      assert.notEqual(wsResult, "opened", "the WebSocket must never actually open during capture");
+    } finally {
+      await context.close();
+    }
+
+    assert.equal(connectionsReceived, 0, "the local probe server must never have received a connection attempt");
+  } finally {
+    server.close();
   }
 });

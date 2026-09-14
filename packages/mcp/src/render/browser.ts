@@ -109,5 +109,16 @@ export async function createNetworkBlockedContext(
       void route.abort("blockedbyclient");
     }
   });
+  // `context.route` above never sees a WebSocket handshake — Playwright
+  // routes HTTP(S) requests and WebSocket connections through two separate
+  // mechanisms, and the block above only ever covered the first. Without
+  // this, a `new WebSocket("wss://...")` inside an artboard would connect
+  // straight out, the one network path the HTTP-request block left open.
+  // A routed WebSocket does not connect to a real server unless the handler
+  // asks it to (`connectToServer`), so simply never doing that — then
+  // closing it — refuses the connection without ever dialing out.
+  await context.routeWebSocket("**/*", (ws) => {
+    void ws.close({ code: 1006, reason: "blocked: no network during capture" });
+  });
   return context;
 }
