@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { promises as fs } from "node:fs";
+import net from "node:net";
 import os from "node:os";
 import path from "node:path";
 import { chromium, type Browser, type Page } from "playwright";
@@ -268,4 +269,112 @@ test("replaying an artboard restarts its animation without reloading the iframe"
 
     await assert.doesNotReject(frameAfter!.locator("#arrived").waitFor({ state: "visible" }));
   });
+});
+
+/**
+ * The MCP server's screenshot capture blocks the network by intercepting
+ * every request in a Playwright context it controls (see
+ * createNetworkBlockedContext in @beziera/mcp) — a mechanism that only
+ * exists for that one, server-launched browser. An artboard is shown live
+ * in the canvas in the user's own, ordinary browser tab, where nothing
+ * like that route interception is available; the same artboard content
+ * still runs there, in the same sandboxed iframe, so it needs its own way
+ * to be kept off the network. That is what the Content-Security-Policy
+ * serve.ts now sends with every artboard response is for, and this proves
+ * it actually holds in a real browser rather than trusting the header.
+ */
+test("an artboard cannot open a WebSocket while shown live in the canvas — proven, not assumed", async () => {
+  // A raw TCP server, exactly like the MCP capture-side WebSocket test: a
+  // plain TCP accept proves Chromium dialled out at all, which is strictly
+  // earlier than any WebSocket-protocol detail and cannot be fooled by one.
+  let connectionsReceived = 0;
+  const probeServer = net.createServer((socket) => {
+    connectionsReceived++;
+    socket.destroy();
+  });
+  await new Promise<void>((resolve) => probeServer.listen(0, "127.0.0.1", resolve));
+  const address = probeServer.address();
+  if (address === null || typeof address === "string") {
+    throw new Error("expected the probe server to bind a port");
+  }
+  const probePort = address.port;
+
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "beziera-canvas-ws-test-"));
+  await fs.mkdir(path.join(root, "artboards"), { recursive: true });
+  await fs.writeFile(
+    path.join(root, "artboards", "reach-out.html"),
+    `<!doctype html><html><body style="margin:0">
+      <script>
+        window.__wsResult = "pending";
+        try {
+          const socket = new WebSocket("ws://127.0.0.1:${probePort}/");
+          socket.onopen = () => { window.__wsResult = "opened"; };
+          socket.onerror = () => { window.__wsResult = "error"; };
+          socket.onclose = () => {
+            if (window.__wsResult === "pending") window.__wsResult = "closed";
+          };
+        } catch (err) {
+          window.__wsResult = "threw";
+        }
+      </script>
+    </body></html>`,
+    "utf8"
+  );
+  await fs.writeFile(
+    path.join(root, "design.json"),
+    JSON.stringify(
+      {
+        name: "WebSocket-block test design",
+        artboards: [
+          {
+            id: "reach-out",
+            file: "artboards/reach-out.html",
+            name: "Reach out",
+            x: 0,
+            y: 40,
+            width: 300,
+            height: 200,
+          },
+        ],
+        links: [],
+      },
+      null,
+      2
+    ),
+    "utf8"
+  );
+
+  const server = await startCanvasServer(root, 0);
+  try {
+    const page = await browser.newPage();
+    try {
+      await page.goto(server.url);
+      await page.waitForSelector("#artboard-iframe-reach-out");
+
+      const iframeHandle = await page.$("#artboard-iframe-reach-out");
+      assert.ok(iframeHandle, "expected the artboard's iframe to exist");
+      const frame = await iframeHandle!.contentFrame();
+      assert.ok(frame, "expected the iframe to have a content frame");
+
+      const deadline = Date.now() + 2_000;
+      let wsResult = await frame!.evaluate("window.__wsResult");
+      while (wsResult === "pending" && Date.now() < deadline) {
+        await page.waitForTimeout(20);
+        wsResult = await frame!.evaluate("window.__wsResult");
+      }
+
+      assert.notEqual(wsResult, "opened", "the WebSocket must never actually open while shown live in the canvas");
+    } finally {
+      await page.close();
+    }
+
+    assert.equal(
+      connectionsReceived,
+      0,
+      "the local probe server must never have received a connection attempt from the canvas"
+    );
+  } finally {
+    await server.close();
+    probeServer.close();
+  }
 });

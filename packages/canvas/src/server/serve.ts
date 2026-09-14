@@ -151,16 +151,77 @@ async function handleMarksRoute(
   res.end("Method not allowed");
 }
 
+/**
+ * Content-Security-Policy applied to every artboard response — the same
+ * "cannot reach the network" restriction the MCP server's screenshot
+ * capture already enforces, applied here too so an artboard rendered live
+ * in the canvas can't reach it either. `default-src 'none'` closes
+ * everything by default; the directives after it name exactly what a
+ * self-contained artboard (plus the two scripts this server injects into
+ * it) actually uses — inline scripts and styles, the injected same-origin
+ * scripts, and data:/blob: assets an artboard inlines rather than fetches.
+ * `connect-src 'none'` is the one that matters most: it closes fetch, XHR,
+ * EventSource and WebSocket alike, all of which a plain HTTP route block
+ * (the mechanism capture.ts uses) cannot reach at all in a live browser tab.
+ *
+ * The iframe's sandbox deliberately omits `allow-same-origin`, so its
+ * security origin is opaque and the `'self'` keyword could never match
+ * inside it — this names the request's actual host explicitly instead,
+ * which CSP matches against the resource's own URL regardless of that
+ * opaque origin.
+ */
+function artboardContentSecurityPolicy(host: string | undefined): string {
+  const ownOrigin = host ? `http://${host}` : "'none'";
+  return [
+    "default-src 'none'",
+    `script-src 'unsafe-inline' ${ownOrigin}`,
+    "style-src 'unsafe-inline'",
+    "img-src data: blob:",
+    "font-src data:",
+    "connect-src 'none'",
+  ].join("; ");
+}
+
 async function serveArtboardHtml(
   res: ServerResponse,
   filePath: string,
-  artboardId: string
+  artboardId: string,
+  host: string | undefined
 ): Promise<void> {
   try {
     const html = await fs.readFile(filePath, "utf8");
     const withAgents = injectPreviewAgent(injectMarkAgent(html, artboardId));
-    res.writeHead(200, { "Content-Type": ARTBOARD_CONTENT_TYPE, "Cache-Control": "no-cache" });
+    res.writeHead(200, {
+      "Content-Type": ARTBOARD_CONTENT_TYPE,
+      "Cache-Control": "no-cache",
+      "Content-Security-Policy": artboardContentSecurityPolicy(host),
+    });
     res.end(withAgents);
+  } catch {
+    notFound(res);
+  }
+}
+
+/**
+ * Serve an artboard file that design.json no longer (or does not yet)
+ * register, unmodified apart from the same network-closing CSP every other
+ * artboard response carries — this file still renders in the same
+ * sandboxed iframe as a registered one, so it needs the same policy even
+ * though it gets neither injected agent script.
+ */
+async function serveArtboardFileAsIs(
+  res: ServerResponse,
+  filePath: string,
+  host: string | undefined
+): Promise<void> {
+  try {
+    const body = await fs.readFile(filePath);
+    res.writeHead(200, {
+      "Content-Type": ARTBOARD_CONTENT_TYPE,
+      "Cache-Control": "no-cache",
+      "Content-Security-Policy": artboardContentSecurityPolicy(host),
+    });
+    res.end(body);
   } catch {
     notFound(res);
   }
@@ -220,11 +281,11 @@ export function createCanvasHttpServer(folder: DesignFolder): Server {
       }
       const artboardId = await findArtboardIdForFile(folder, relative);
       if (artboardId) {
-        await serveArtboardHtml(res, absolute, artboardId);
+        await serveArtboardHtml(res, absolute, artboardId, req.headers.host);
       } else {
         // Not (or no longer) registered in design.json — serve it as-is
         // rather than guess which artboard a mark on it would belong to.
-        await serveFile(res, absolute, ARTBOARD_CONTENT_TYPE);
+        await serveArtboardFileAsIs(res, absolute, req.headers.host);
       }
       return;
     }

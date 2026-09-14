@@ -94,6 +94,22 @@ test("GET /artboards/<file> serves the artboard with both agents injected, for a
   });
 });
 
+test("GET /artboards/<file> carries a Content-Security-Policy that closes off the network", async () => {
+  const root = await makeDesignFolder();
+  await withServer(root, async (baseUrl) => {
+    const response = await fetch(`${baseUrl}/artboards/login.html`);
+    const csp = response.headers.get("Content-Security-Policy");
+
+    assert.ok(csp, "expected every artboard response to carry a Content-Security-Policy header");
+    // connect-src is what actually matters here — it is the directive that
+    // covers fetch, XHR, EventSource and WebSocket alike. A real browser
+    // exercise of this (does a WebSocket from inside the iframe actually
+    // fail to connect) lives in preview.browser.test.ts; this just pins the
+    // header the browser test depends on actually being sent.
+    assert.match(csp!, /connect-src 'none'/);
+  });
+});
+
 test("GET /api/marks returns an empty queue before any mark exists", async () => {
   const root = await makeDesignFolder();
   await withServer(root, async (baseUrl) => {
