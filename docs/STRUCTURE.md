@@ -99,15 +99,17 @@ canvas/
 
 **`artboard.ts` owns the sandbox.** Every iframe is created in exactly one place, so the sandbox attributes cannot be forgotten by the next person who adds a way to display an artboard.
 
-## `packages/cli`
+## `packages/cli` — published as `beziera`
 
 ```
 cli/src/
-└── index.ts               in a folder: create it if new, start the canvas,
-                           open the browser, print the MCP configuration to paste
+├── index.ts               in a folder: create it if new, start the canvas,
+│                          open the browser, print the MCP configuration to paste
+└── registration.ts        the MCP registration snippets themselves — pure functions,
+                           testable without starting a server or spawning a process
 ```
 
-Deliberately thin. Its job is that a user who has read no documentation gets a canvas and the exact lines to add to their agent's MCP configuration.
+Deliberately thin. Its job is that a user who has read no documentation gets a canvas and the exact lines to add to their agent's MCP configuration. `--write-mcp-config <path>` will also merge that registration into a `.mcp.json`-shaped file directly, and `--no-open` skips the automatic browser launch — both optional; the default is print-and-open.
 
 ## `skill/`
 

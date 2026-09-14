@@ -1,8 +1,8 @@
 {
-  "name": "beziera",
+  "name": "beziera-workspace",
   "private": true,
   "version": "0.1.0",
-  "description": "AI-assisted UI/UX design, prototype and animation platform. HTML-native artboards on a pan/zoom canvas.",
+  "description": "Monorepo root for Beziera — never published itself. The published package is packages/cli, named \"beziera\" (see its own package.json).",
   "license": "MIT",
   "engines": {
     "node": ">=20"
@@ -11,9 +11,10 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build --workspace=@beziera/core && npm run build --workspace=@beziera/mcp && npm run build --workspace=@beziera/canvas",
+    "build": "npm run build --workspace=@beziera/core && npm run build --workspace=@beziera/mcp && npm run build --workspace=@beziera/canvas && npm run build --workspace=beziera",
     "canvas": "npm run start --workspace=@beziera/canvas",
     "mcp": "npm run start --workspace=@beziera/mcp",
-    "test": "npm run build && npm run test --workspace=@beziera/core && npm run test --workspace=@beziera/mcp && npm run test --workspace=@beziera/canvas"
+    "cli": "npm run start --workspace=beziera",
+    "test": "npm run build && npm run test --workspace=@beziera/core && npm run test --workspace=@beziera/mcp && npm run test --workspace=@beziera/canvas && npm run test --workspace=beziera"
   }
 }
