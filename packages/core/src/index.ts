@@ -10,3 +10,4 @@ export * from "./watch/watcher.js";
 export * from "./render/browser.js";
 export * from "./render/capture.js";
 export * from "./export/inline-html.js";
+export * from "./util/is-main-module.js";

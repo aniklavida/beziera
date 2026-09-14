@@ -1,7 +1,8 @@
+#!/usr/bin/env node
 import path from "node:path";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { openDesignFolder, closeBrowser, type DesignFolder } from "@beziera/core";
+import { openDesignFolder, closeBrowser, isMainModule, type DesignFolder } from "@beziera/core";
 import { registerListArtboardsTool } from "./tools/list-artboards.js";
 import { registerReadArtboardTool } from "./tools/read-artboard.js";
 import { registerWriteArtboardTool } from "./tools/write-artboard.js";
@@ -73,8 +74,10 @@ async function main(): Promise<void> {
 }
 
 // Only run when this file is executed directly (`node dist/server.js <folder>`,
-// or via the `beziera-mcp` bin), not when imported as a library for tests.
-if (import.meta.url === `file://${process.argv[1]}`) {
+// or via the `beziera-mcp` bin — including through npm's bin symlink, which
+// isMainModule handles correctly and a plain import.meta.url comparison
+// does not; see its own comment), not when imported as a library for tests.
+if (isMainModule(import.meta.url)) {
   main().catch((err) => {
     // stdout is the JSON-RPC channel for this transport — startup failures
     // must go to stderr, never stdout.

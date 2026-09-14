@@ -1,7 +1,8 @@
+#!/usr/bin/env node
 import { promises as fs } from "node:fs";
 import { spawn } from "node:child_process";
 import path from "node:path";
-import { openDesignFolder, initDesignFolder } from "@beziera/core";
+import { openDesignFolder, initDesignFolder, isMainModule } from "@beziera/core";
 import { startCanvasServer, type CanvasServerHandle } from "@beziera/canvas";
 import { formatRegistrationMessage, mcpServerConfigObject } from "./registration.js";
 
@@ -180,8 +181,11 @@ async function main(): Promise<void> {
 }
 
 // Only run when this file is executed directly (`node dist/index.js`, or via
-// the `beziera` bin), not when its exports are imported for tests.
-if (import.meta.url === `file://${process.argv[1]}`) {
+// the `beziera` bin — including through npm's bin symlink, which is exactly
+// how npx invokes it, and which isMainModule handles correctly where a
+// plain import.meta.url comparison does not; see its own comment), not when
+// its exports are imported for tests.
+if (isMainModule(import.meta.url)) {
   main().catch((err) => {
     console.error(err);
     process.exitCode = 1;

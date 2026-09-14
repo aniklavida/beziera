@@ -1,4 +1,5 @@
-import { openDesignFolder, watchDesignFolder, closeBrowser } from "@beziera/core";
+#!/usr/bin/env node
+import { openDesignFolder, watchDesignFolder, closeBrowser, isMainModule } from "@beziera/core";
 import { createCanvasHttpServer } from "./serve.js";
 import { CanvasSocket } from "./socket.js";
 
@@ -76,9 +77,14 @@ async function main(): Promise<void> {
   });
 }
 
-// Only run when this file is executed directly (`node dist/server/index.js <folder>`),
-// not when imported as a library from the CLI or elsewhere.
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Only run when this file is executed directly (`node dist/server/index.js <folder>`,
+// or via the `beziera-canvas` bin — including through npm's bin symlink, which
+// isMainModule handles correctly and a plain import.meta.url comparison does
+// not; see its own comment), not when imported as a library from the CLI or
+// elsewhere — packages/cli imports startCanvasServer from this exact module,
+// so a guard that fired on every import would start a second, argv-driven
+// canvas server underneath the CLI's own one.
+if (isMainModule(import.meta.url)) {
   main().catch((err) => {
     console.error(err);
     process.exitCode = 1;

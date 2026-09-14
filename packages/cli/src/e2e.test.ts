@@ -10,6 +10,64 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const CLI_ENTRY = path.resolve(__dirname, "index.js");
 
 /**
+ * Every one of this product's three `bin` entry points must start with a
+ * `#!/usr/bin/env node` shebang. Without it, npm's own bin-linking still
+ * happily creates `node_modules/.bin/beziera` (and `beziera-mcp`,
+ * `beziera-canvas`) as an executable symlink — but invoking it (the way
+ * `npx beziera` and the printed `npx --package=@beziera/mcp beziera-mcp`
+ * registration both do) hands the file to the OS's default shell, not
+ * Node, since nothing tells the OS which interpreter to use. Every other
+ * test in this repository invokes these entry points via
+ * `node dist/x.js <args>` directly, which never exercises that path — this
+ * one exists because the clean-install check (`npm pack`, install the
+ * tarball into a fresh temp HOME with a clean npm cache, run it) is what
+ * actually caught the gap, and a shebang, once fixed, does not un-fix
+ * itself, but a careless edit to one of these three files' first line could
+ * still reintroduce it.
+ */
+test("running the CLI through a symlink to it — exactly what npm's own bin linking does — still runs main()", async () => {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "beziera-cli-symlink-test-"));
+  const linkedEntry = path.join(dir, "beziera-via-symlink");
+  await fs.symlink(CLI_ENTRY, linkedEntry);
+  const designFolder = path.join(dir, "design");
+
+  const child = spawn(process.execPath, [linkedEntry, designFolder, "--port", "0", "--no-open"], {
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  const lines: string[] = [];
+  child.stdout.on("data", (chunk: Buffer) => lines.push(...chunk.toString("utf8").split("\n")));
+  child.stderr.on("data", (chunk: Buffer) => lines.push(...chunk.toString("utf8").split("\n")));
+
+  try {
+    // If main() never ran (the bug isMainModule exists to fix), this times
+    // out with no output at all rather than failing on a specific assertion
+    // — which is exactly the silent failure the clean-install check found.
+    await waitForLine(() => lines, /Beziera canvas running at/);
+    await assert.doesNotReject(fs.access(path.join(designFolder, "design.json")));
+  } finally {
+    child.kill("SIGTERM");
+    await new Promise((resolve) => child.once("exit", resolve));
+  }
+});
+
+test("every published bin entry point (beziera, beziera-mcp, beziera-canvas) starts with a node shebang", async () => {
+  const monorepoRoot = path.resolve(__dirname, "..", "..", "..");
+  const binFiles = [
+    path.resolve(__dirname, "index.js"), // this package's own dist/index.js
+    path.join(monorepoRoot, "packages", "mcp", "dist", "server.js"),
+    path.join(monorepoRoot, "packages", "canvas", "dist", "server", "index.js"),
+  ];
+  for (const binFile of binFiles) {
+    const firstLine = (await fs.readFile(binFile, "utf8")).split("\n")[0];
+    assert.equal(
+      firstLine,
+      "#!/usr/bin/env node",
+      `${binFile} must start with a node shebang so npx/npm's bin symlink runs it as Node, not as a shell script`
+    );
+  }
+});
+
+/**
  * The one test in this package that actually runs the built `beziera`
  * entry point as a child process, the way `npx beziera` really would —
  * everything else here (registration.test.ts, index.test.ts) tests the pure
