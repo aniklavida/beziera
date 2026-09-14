@@ -132,7 +132,12 @@ Pan and zoom over an infinite surface. Each artboard is an iframe showing the re
 
 **No UI framework [assumed].** The canvas is a transform, a set of iframes and a socket. A framework would be the largest dependency in the project and would earn nothing.
 
-**Every artboard iframe is sandboxed**, and the screenshot context blocks network egress. An artboard is arbitrary HTML executing on the user's machine, and this is a first-commit requirement rather than later hardening.
+**Every artboard iframe is sandboxed**, both on the canvas and during a screenshot. An artboard is arbitrary HTML executing on the user's machine, and this is a first-commit requirement rather than later hardening. Concretely, and each one covered by a test that fails if it regresses:
+
+- The screenshot render path keeps Chromium's own OS-level process sandbox on.
+- The screenshot context blocks network egress — HTTP, HTTPS and WebSocket alike — and can read exactly one local file: the artboard being captured.
+- A screenshot that never finishes rendering is abandoned after a bounded time rather than hanging indefinitely.
+- An artboard shown live on the canvas carries a Content-Security-Policy closing the same network paths, since the canvas runs in an ordinary browser tab rather than the request-routed context the screenshot path controls.
 
 ## 12 · Marks
 
@@ -215,7 +220,7 @@ Stated here and in the README, and not to be quietly softened elsewhere.
 - [ ] **The agent takes a screenshot, identifies a real visual problem, and fixes it — unprompted, because the skill told it to.**
 - [ ] A mark left on the canvas is visible to `get_pending_marks` and leaves the pending list after `clear_marks`.
 - [ ] The canvas displays a paste-ready command for triggering the agent.
-- [ ] Artboard iframes are sandboxed and the screenshot context cannot reach the network.
+- [ ] Artboard iframes are sandboxed everywhere they render; the screenshot context keeps Chromium's own process sandbox on, cannot reach the network, can read only the artboard being captured, and abandons a capture that never finishes; the live canvas closes the same network paths with a Content-Security-Policy.
 - [ ] A design folder contains no machine-specific path and works after being cloned by someone else.
 - [ ] The README states both known limitations above the fold.
 - [ ] Every README claim has working evidence or is labelled planned.

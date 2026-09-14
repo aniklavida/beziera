@@ -89,13 +89,16 @@ A screenshot is taken at a declared viewport width, after fonts have loaded and 
 
 An artboard is arbitrary HTML executing on the user's machine, and it is usually HTML a language model wrote. It is treated as untrusted.
 
-- Artboards render in **sandboxed iframes**.
-- The screenshot context **cannot reach the network**, so an artboard cannot exfiltrate what it was given.
+- Artboards render in **sandboxed iframes** — `allow-scripts` only, never `allow-same-origin` — whether captured or shown live on the canvas.
+- The screenshot render path keeps **Chromium's own OS-level process sandbox on**; nothing in this product disables it.
+- The screenshot context **cannot reach the network** (no HTTP, HTTPS or WebSocket) and can read exactly one local file — the artboard actually being captured — not any other file on disk.
+- A screenshot that never finishes rendering is **abandoned after a bounded time**, rather than hanging the tool indefinitely.
+- An artboard shown live on the canvas carries a **Content-Security-Policy** closing the same network paths the screenshot context blocks, since the canvas renders in an ordinary browser tab where the capture path's request-routing block does not apply.
 - The canvas server binds to localhost and serves the design folder — never a path above it.
 - The MCP server reads and writes inside the design folder only. A path that escapes it is rejected, not normalised.
 - There is no API key, no account and no telemetry, so there is no credential to leak.
 
-These are first-commit requirements.
+These are first-commit requirements, and every one of them above is pinned by a test that fails if the protection is removed.
 
 ## What this architecture buys
 
