@@ -16,6 +16,25 @@ export function artboardSrc(artboard, cacheBust) {
   return cacheBust ? `${base}?t=${cacheBust}` : base;
 }
 
+/**
+ * Build one "PNG" / "HTML" export link. A plain anchor with `download`,
+ * pointed straight at the canvas server's own /export/<id>/<format> route
+ * (see handleExportRoute in serve.ts) — the browser's native download
+ * handling does the rest; there is nothing here to wire up beyond the URL.
+ */
+function exportLink(artboardId, format, label) {
+  const link = document.createElement("a");
+  link.className = "artboard-export";
+  link.href = `/export/${encodeURIComponent(artboardId)}/${format}`;
+  link.download = `${artboardId}.${format}`;
+  link.textContent = label;
+  link.title =
+    format === "png"
+      ? "Download a PNG screenshot of this artboard"
+      : "Download this artboard as a self-contained HTML file (assets inlined, opens with no network)";
+  return link;
+}
+
 /** Create the DOM element for one artboard: a positioned card with a sandboxed iframe inside. */
 export function createArtboardElement(artboard) {
   const el = document.createElement("div");
@@ -49,6 +68,12 @@ export function createArtboardElement(artboard) {
     iframe.contentWindow?.postMessage({ source: "beziera-canvas", type: "replay-animations" }, "*");
   });
   toolbar.appendChild(replayBtn);
+
+  const actions = document.createElement("div");
+  actions.className = "artboard-actions";
+  actions.appendChild(exportLink(artboard.id, "png", "PNG"));
+  actions.appendChild(exportLink(artboard.id, "html", "HTML"));
+  toolbar.appendChild(actions);
 
   // The iframe's rounded corners come from clipping this wrapper, not
   // .artboard itself — .artboard has to stay unclipped so the toolbar,

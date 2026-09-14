@@ -1,4 +1,4 @@
-import { openDesignFolder, watchDesignFolder } from "@beziera/core";
+import { openDesignFolder, watchDesignFolder, closeBrowser } from "@beziera/core";
 import { createCanvasHttpServer } from "./serve.js";
 import { CanvasSocket } from "./socket.js";
 
@@ -40,6 +40,11 @@ export async function startCanvasServer(
       await new Promise<void>((resolve, reject) =>
         httpServer.close((err) => (err ? reject(err) : resolve()))
       );
+      // A PNG export may have launched the same shared Chromium instance
+      // screenshot_artboard uses (see @beziera/core's render/browser.ts).
+      // Idempotent when no export ever ran, so this is safe to call
+      // unconditionally rather than tracking whether one did.
+      await closeBrowser();
     },
   };
 }
@@ -50,6 +55,25 @@ async function main(): Promise<void> {
   const server = await startCanvasServer(folderArg, portArg);
   console.log(`Beziera canvas running at ${server.url}`);
   console.log(`Design folder: ${folderArg}`);
+
+  // Closes the shared Chromium instance an export may have launched (see
+  // startCanvasServer's close() above) before this process actually exits —
+  // without this, Ctrl+C leaves that child process behind rather than
+  // tearing it down through the one module responsible for its lifecycle.
+  let shuttingDown = false;
+  const shutdown = (): void => {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    server.close().catch((err: unknown) => console.error(err));
+  };
+  process.on("SIGINT", () => {
+    shutdown();
+    process.exit(0);
+  });
+  process.on("SIGTERM", () => {
+    shutdown();
+    process.exit(0);
+  });
 }
 
 // Only run when this file is executed directly (`node dist/server/index.js <folder>`),

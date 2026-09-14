@@ -8,6 +8,9 @@ import {
   readMarksJson,
   addMark,
   NewMarkSchema,
+  getBrowser,
+  captureHtmlFile,
+  inlineArtboardHtml,
   type DesignFolder,
 } from "@beziera/core";
 
@@ -151,6 +154,87 @@ async function handleMarksRoute(
   res.end("Method not allowed");
 }
 
+/** Find one artboard's design.json entry by id, or null if no such artboard is registered. */
+async function findArtboardById(
+  folder: DesignFolder,
+  id: string
+): Promise<{ id: string; file: string } | null> {
+  const design = await readDesignJson(folder.designJsonPath);
+  return design.artboards.find((a) => a.id === id) ?? null;
+}
+
+/**
+ * Every export is also written to `<design folder>/exports/`, alongside the
+ * copy served as a download — a durable local record a user can find again
+ * without re-clicking the button, in the one place this product ever writes
+ * outside `artboards/`, `design.json` and `marks.json`. Never read back by
+ * anything else here; re-exporting just overwrites the file with the
+ * artboard's current state.
+ */
+async function persistExport(folder: DesignFolder, filename: string, body: Buffer): Promise<void> {
+  const exportsDir = path.join(folder.root, "exports");
+  await fs.mkdir(exportsDir, { recursive: true });
+  await fs.writeFile(path.join(exportsDir, filename), body);
+}
+
+/**
+ * `GET /export/<id>/png` and `GET /export/<id>/html` — the two export
+ * formats v1 ships. PNG reuses the exact capture path `screenshot_artboard`
+ * uses (same headless, network-blocked, sandboxed render, now shared through
+ * `@beziera/core`); HTML inlines the artboard's local assets so the result
+ * opens from disk with no other file and no network request. Both are
+ * user-triggered from the canvas — there is no MCP tool for either, since
+ * export is something a person does by clicking a button, not something an
+ * agent calls mid-turn.
+ */
+async function handleExportRoute(
+  res: ServerResponse,
+  folder: DesignFolder,
+  id: string,
+  format: "png" | "html"
+): Promise<void> {
+  const artboard = await findArtboardById(folder, id);
+  if (!artboard) {
+    notFound(res);
+    return;
+  }
+
+  let absolutePath: string;
+  try {
+    absolutePath = resolveInsideFolder(folder, artboard.file);
+  } catch {
+    notFound(res);
+    return;
+  }
+
+  try {
+    if (format === "png") {
+      const browser = await getBrowser();
+      const captured = await captureHtmlFile(browser, absolutePath);
+      await persistExport(folder, `${id}.png`, captured.png);
+      res.writeHead(200, {
+        "Content-Type": "image/png",
+        "Content-Disposition": `attachment; filename="${id}.png"`,
+        "Cache-Control": "no-cache",
+      });
+      res.end(captured.png);
+    } else {
+      const inlined = await inlineArtboardHtml(folder, absolutePath);
+      const body = Buffer.from(inlined.html, "utf8");
+      await persistExport(folder, `${id}.html`, body);
+      res.writeHead(200, {
+        "Content-Type": "text/html; charset=utf-8",
+        "Content-Disposition": `attachment; filename="${id}.html"`,
+        "Cache-Control": "no-cache",
+      });
+      res.end(body);
+    }
+  } catch (err) {
+    res.writeHead(500, { "Content-Type": "text/plain; charset=utf-8" });
+    res.end(`Export failed: ${(err as Error).message}`);
+  }
+}
+
 /**
  * Content-Security-Policy applied to every artboard response — the same
  * "cannot reach the network" restriction the MCP server's screenshot
@@ -230,7 +314,7 @@ async function serveArtboardFileAsIs(
 /**
  * Create the canvas HTTP server.
  *
- * It serves four things, and nothing else:
+ * It serves five things, and nothing else:
  *  - `/api/design`      the current design.json, as JSON
  *  - `/api/marks`        GET the current marks.json; POST a new mark from the canvas
  *  - `/artboards/*`      the design folder's real artboard HTML files, with
@@ -238,6 +322,10 @@ async function serveArtboardFileAsIs(
  *                        clicked into a mark (see injectMarkAgent below),
  *                        and preview-agent.js so a "Replay" click can
  *                        restart its CSS animations (see injectPreviewAgent)
+ *  - `/export/<id>/png`  and `/export/<id>/html` — download one artboard as
+ *                        a screenshot or a self-contained HTML file (see
+ *                        handleExportRoute below); also written to
+ *                        `exports/` in the design folder
  *  - everything else     the canvas UI's static assets (index.html, canvas.js, style.css)
  *
  * The design folder is the only thing on disk this server can reach — every
@@ -267,6 +355,21 @@ export function createCanvasHttpServer(folder: DesignFolder): Server {
 
     if (pathname === "/api/marks") {
       await handleMarksRoute(req, res, folder);
+      return;
+    }
+
+    if (pathname.startsWith("/export/")) {
+      if (req.method !== "GET") {
+        res.writeHead(405, { "Content-Type": "text/plain; charset=utf-8", Allow: "GET" });
+        res.end("Method not allowed");
+        return;
+      }
+      const [id, format] = pathname.slice("/export/".length).split("/");
+      if (!id || (format !== "png" && format !== "html")) {
+        notFound(res);
+        return;
+      }
+      await handleExportRoute(res, folder, decodeURIComponent(id), format);
       return;
     }
 

@@ -130,6 +130,24 @@ body {
   cursor: pointer;
 }
 
+.artboard .artboard-actions {
+  pointer-events: none;
+  display: flex;
+  gap: 4px;
+}
+
+.artboard .artboard-export {
+  pointer-events: auto;
+  font: 11px -apple-system, BlinkMacSystemFont, sans-serif;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--grid-dot);
+  background: var(--label-bg);
+  color: var(--label);
+  text-decoration: none;
+  cursor: pointer;
+}
+
 #hint {
   position: fixed;
   left: 12px;
