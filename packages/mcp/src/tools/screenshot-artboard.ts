@@ -1,8 +1,6 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { listArtboards, type DesignFolder } from "@beziera/core";
-import { getBrowser } from "../render/browser.js";
-import { captureHtmlFile, VIEWPORTS } from "../render/capture.js";
+import { listArtboards, getBrowser, captureHtmlFile, VIEWPORTS, type DesignFolder } from "@beziera/core";
 
 /**
  * `screenshot_artboard` — the quality loop. Render one artboard in a

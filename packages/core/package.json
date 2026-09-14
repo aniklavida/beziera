@@ -1,7 +1,7 @@
 {
   "name": "@beziera/core",
   "version": "0.1.0",
-  "description": "The Beziera design folder: read, write, validate and watch artboards, design.json and marks.json. The only package that touches disk.",
+  "description": "The Beziera design folder: read, write, validate and watch artboards, design.json and marks.json. The only package that touches disk. Also owns the one headless-browser render path (screenshot capture, PNG and self-contained HTML export) shared by the MCP server and the canvas.",
   "license": "MIT",
   "type": "module",
   "main": "dist/index.js",
@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "chokidar": "^5.0.0",
+    "playwright": "^1.63.0",
     "zod": "^4.6.4"
   },
   "devDependencies": {

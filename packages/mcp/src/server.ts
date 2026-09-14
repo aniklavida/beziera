@@ -1,7 +1,7 @@
 import path from "node:path";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { openDesignFolder, type DesignFolder } from "@beziera/core";
+import { openDesignFolder, closeBrowser, type DesignFolder } from "@beziera/core";
 import { registerListArtboardsTool } from "./tools/list-artboards.js";
 import { registerReadArtboardTool } from "./tools/read-artboard.js";
 import { registerWriteArtboardTool } from "./tools/write-artboard.js";
@@ -10,7 +10,6 @@ import { registerLinkArtboardsTool } from "./tools/link-artboards.js";
 import { registerScreenshotArtboardTool } from "./tools/screenshot-artboard.js";
 import { registerGetPendingMarksTool } from "./tools/get-pending-marks.js";
 import { registerClearMarksTool } from "./tools/clear-marks.js";
-import { closeBrowser } from "./render/browser.js";
 
 /**
  * Build the Beziera MCP server for one design folder.

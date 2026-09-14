@@ -47,6 +47,11 @@ core/src/
 │   ├── artboards.ts       list, read, write, create — HTML files
 │   ├── design-json.ts     positions, links, metadata
 │   └── marks-json.ts      the feedback queue
+├── render/
+│   ├── browser.ts         headless browser lifecycle — launch once, reuse, tear down
+│   └── capture.ts         viewport, font settling, image encoding — screenshot_artboard and PNG export both call this
+├── export/
+│   └── inline-html.ts     self-contained HTML export: local assets inlined as data URIs or literal text
 ├── watch/
 │   └── watcher.ts         emits which file changed
 └── schema/
@@ -55,28 +60,25 @@ core/src/
 
 **One schema definition, two consumers.** The MCP tool inputs and the canvas validate against the same schemas. A format described in two places is a format that breaks in one of them.
 
+**`render/` lives here, not in `mcp`, because two packages need it.** `screenshot_artboard` and the canvas's PNG export are the same headless-browser capture from two callers; putting it anywhere but the package both already depend on would mean choosing one caller to import the other, or duplicating browser lifecycle management in two places.
+
 ## `packages/mcp` — the bridge
 
 ```
 mcp/src/
 ├── server.ts              stdio transport, tool registration
-├── tools/
-│   ├── list-artboards.ts
-│   ├── read-artboard.ts
-│   ├── write-artboard.ts
-│   ├── create-artboard.ts
-│   ├── screenshot-artboard.ts
-│   ├── get-pending-marks.ts
-│   ├── clear-marks.ts
-│   └── link-artboards.ts
-└── render/
-    ├── browser.ts         headless browser lifecycle — launch once, reuse, tear down
-    └── capture.ts         viewport, font settling, image encoding
+└── tools/
+    ├── list-artboards.ts
+    ├── read-artboard.ts
+    ├── write-artboard.ts
+    ├── create-artboard.ts
+    ├── screenshot-artboard.ts   calls into @beziera/core's render module
+    ├── get-pending-marks.ts
+    ├── clear-marks.ts
+    └── link-artboards.ts
 ```
 
 **One file per tool.** Eight tools, eight files, and the registration list in `server.ts` reads as the product's whole surface.
-
-**`render/` is separate from `tools/`** because browser lifecycle is the hardest thing in this package, and it should not be tangled inside a tool handler.
 
 ## `packages/canvas` — the surface
 

@@ -54,6 +54,20 @@ export async function openDesignFolder(folderPath: string): Promise<DesignFolder
 }
 
 /**
+ * Whether an already-resolved absolute path sits inside a design folder.
+ * Shared by resolveInsideFolder below and by the self-contained HTML export
+ * (which resolves an artboard's asset references against the artboard's own
+ * directory, not the folder root, so it needs the containment check on its
+ * own rather than through resolveInsideFolder's relative-path signature).
+ */
+export function isPathInsideFolder(folder: DesignFolder, absolutePath: string): boolean {
+  const withSep = folder.root.endsWith(path.sep)
+    ? folder.root
+    : folder.root + path.sep;
+  return absolutePath === folder.root || absolutePath.startsWith(withSep);
+}
+
+/**
  * Resolve a path that something outside this module claims is inside the design
  * folder (a design.json "file" field, or a canvas HTTP request) and reject
  * anything that escapes it. An escaping path is rejected outright, never
@@ -65,10 +79,7 @@ export function resolveInsideFolder(
   relativePath: string
 ): string {
   const resolved = path.resolve(folder.root, relativePath);
-  const withSep = folder.root.endsWith(path.sep)
-    ? folder.root
-    : folder.root + path.sep;
-  if (resolved !== folder.root && !resolved.startsWith(withSep)) {
+  if (!isPathInsideFolder(folder, resolved)) {
     throw new DesignFolderError(`Path escapes design folder: ${relativePath}`);
   }
   return resolved;

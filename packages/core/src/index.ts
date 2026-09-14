@@ -7,3 +7,6 @@ export * from "./design/marks-json.js";
 export * from "./design/artboards.js";
 export * from "./design/links.js";
 export * from "./watch/watcher.js";
+export * from "./render/browser.js";
+export * from "./render/capture.js";
+export * from "./export/inline-html.js";

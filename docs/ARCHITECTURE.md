@@ -61,13 +61,13 @@ The skill is what closes the loop — it instructs the agent to render and look 
 ## Packages
 
 ```
-core/      the design folder: read, write, validate, watch
+core/      the design folder: read, write, validate, watch — and the shared render path
 mcp/       the MCP server and its eight tools
 canvas/    the web surface
 cli/       starts the canvas, prints the MCP configuration to paste
 ```
 
-**`core` exists because two packages read the same format.** Without it, `design.json` is parsed in two places by code that will drift, and the format stops being a format.
+**`core` exists because two packages read the same format.** Without it, `design.json` is parsed in two places by code that will drift, and the format stops being a format. The same reasoning is why the headless-browser render path lives in `core` too: `screenshot_artboard` (in `mcp`) and PNG/self-contained-HTML export (in `canvas`) are the same rendering concern from two directions, and `core` is the one place both already depend on.
 
 Boundaries, the first two enforced by a dependency test in CI:
 
@@ -75,7 +75,7 @@ Boundaries, the first two enforced by a dependency test in CI:
 - **`core` imports neither `mcp` nor `canvas`.**
 - **Schemas are defined once, in `core`**, and shared by the MCP tool inputs and the canvas.
 - **Every artboard iframe is created in one module**, so the sandbox attributes cannot be forgotten.
-- **One module owns every headless-browser call.** Nothing else launches a browser.
+- **One module owns every headless-browser call — `core`'s `render/`.** Neither `mcp` nor `canvas` launches a browser of its own; both call into the same shared module.
 
 ## Rendering
 
