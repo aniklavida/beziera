@@ -52,3 +52,34 @@ test("isPathInsideFolder accepts the root itself and any path under it, rejects 
   assert.equal(isPathInsideFolder(folder, path.join(parent, "design-sibling", "x.html")), false);
   assert.equal(isPathInsideFolder(folder, path.join(parent, "designer")), false);
 });
+
+test("initDesignFolder scaffolds the skill instructions, byte-identical to the source, and pointers remain pointers", async () => {
+  const parent = await fs.mkdtemp(path.join(os.tmpdir(), "beziera-init-folder-test-"));
+  const target = path.join(parent, "design");
+  const folder = await initDesignFolder(target);
+
+  // Paths to check
+  const agentsMdPath = path.join(folder.root, "AGENTS.md");
+  const claudeMdPath = path.join(folder.root, "CLAUDE.md");
+  const geminiMdPath = path.join(folder.root, "GEMINI.md");
+  const cursorMdPath = path.join(folder.root, ".cursor", "rules", "design.mdc");
+  const claudeSkillPath = path.join(folder.root, ".claude", "skills", "design", "SKILL.md");
+
+  // Read scaffolded files
+  const scaffoldedAgentsMd = await fs.readFile(agentsMdPath, "utf8");
+  const scaffoldedClaudeMd = await fs.readFile(claudeMdPath, "utf8");
+  const scaffoldedGeminiMd = await fs.readFile(geminiMdPath, "utf8");
+  const scaffoldedCursorMd = await fs.readFile(cursorMdPath, "utf8");
+  const scaffoldedClaudeSkill = await fs.readFile(claudeSkillPath, "utf8");
+
+  // Verify byte-identical to original source (anti-drift guarantee)
+  const sourceAgentsMdUrl = new URL("../../../../skill/AGENTS.md", import.meta.url);
+  const sourceAgentsMd = await fs.readFile(sourceAgentsMdUrl, "utf8");
+  assert.equal(scaffoldedAgentsMd, sourceAgentsMd, "AGENTS.md differs from source");
+
+  // Verify pointers are just pointers
+  assert.ok(scaffoldedClaudeMd.includes("@AGENTS.md"));
+  assert.ok(scaffoldedGeminiMd.includes("AGENTS.md"));
+  assert.ok(scaffoldedCursorMd.includes("../../AGENTS.md"));
+  assert.ok(scaffoldedClaudeSkill.includes("../../../AGENTS.md"));
+});

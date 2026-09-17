@@ -10,8 +10,8 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "test": "node --test dist",
+    "build": "tsc -p tsconfig.json && node -e \"require('fs').cpSync('../../skill', 'dist/skill', {recursive: true})\"",
+    "test": "node --test 'dist/**/*.test.js'",
     "clean": "rm -rf dist"
   },
   "dependencies": {
@@ -20,7 +20,7 @@
     "zod": "^4.6.4"
   },
   "devDependencies": {
-    "typescript": "^7.0.2",
-    "@types/node": "^22.20.2"
+    "@types/node": "^22.20.2",
+    "typescript": "^7.0.2"
   }
 }

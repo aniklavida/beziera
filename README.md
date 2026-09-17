@@ -48,7 +48,7 @@ These are real, they shape how the product works, and you should read them here 
 
 MCP sampling — the mechanism that would let a tool ask your agent to do something — is [not supported in Claude Code](https://github.com/anthropics/claude-code/issues/1785). The request has been open since June 2025, and was still open when this was written on 13 September 2026. Support is uneven across MCP clients generally; some implement it, several of the ones people actually run do not. Beziera therefore does not depend on it in any client, and does not wait for that to change.
 
-What that means in practice: when you leave a mark on the canvas, nothing happens until your next turn with the agent. Two things soften it. The bundled skill tells your agent to **check pending marks at the start of every turn**, so once you are in a conversation the marks get picked up without being asked for. And the canvas **shows you the exact command to paste**, so triggering the agent is a copy rather than a sentence you have to compose.
+What that means in practice: when you leave a mark on the canvas, nothing happens until your next turn with the agent. Two things soften it. The skill delivered into your design folder tells your agent to **check pending marks at the start of every turn**, so once you are in a conversation the marks get picked up without being asked for. And the canvas **shows you the exact command to paste**, so triggering the agent is a copy rather than a sentence you have to compose.
 
 The seam is smaller. It is not gone.
 
@@ -149,7 +149,7 @@ Every claim in this README about what exists is one of exactly four labels. **Im
 | MCP server, all eight tools, against a real MCP client | Implemented and tested |
 | `screenshot_artboard`: sandboxed, network-blocked, bounded-time render | Implemented and tested |
 | Marks: leave one on the canvas, `get_pending_marks`, `clear_marks` | Implemented and tested |
-| The `/design` skill (Claude Code, Codex, Gemini CLI, Cursor pointers) | Implemented and tested |
+| The `/design` skill (Claude Code, Codex, Gemini CLI, Cursor pointers) | Implemented and tested — writes to new design folders; registration inside running vendor apps is not verified |
 | Prototype links and animation replay | Implemented and tested |
 | PNG export | Implemented and tested |
 | Self-contained HTML export (local assets only — see [Export](#export)) | Implemented and tested |

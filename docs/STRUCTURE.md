@@ -115,11 +115,11 @@ Deliberately thin. Its job is that a user who has read no documentation gets a c
 
 ```
 skill/
-├── design.md              the source — tool-neutral
-└── pointers/              thin per-host files that read the same words
+├── AGENTS.md              the source — tool-neutral
+└── ...pointers            thin per-host files that point to AGENTS.md
 ```
 
-One set of instructions, several hosts, nothing duplicated to drift.
+One set of instructions, several hosts, nothing duplicated to drift. These are scaffolded into the root of every new design folder when it is created.
 
 ## A design folder
 

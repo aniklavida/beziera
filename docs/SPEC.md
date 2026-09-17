@@ -149,7 +149,7 @@ Screenshots let the agent see. Marks let the user point.
 
 ## 13 · The skill
 
-Ships in the repository as **tool-neutral markdown with thin per-host pointers [assumed]** — one set of words, several agents, nothing duplicated to drift.
+Delivered into the root of every new design folder as **tool-neutral markdown with thin per-host pointers** — one set of words, several agents, nothing duplicated to drift.
 
 What it encodes:
 

@@ -17,4 +17,10 @@ All notable changes to Beziera are documented here, following [Keep a Changelog]
 - Export: PNG (reusing the exact capture path `screenshot_artboard` uses) and self-contained HTML (local images, fonts, a linked stylesheet and a linked script inlined so the file opens from disk with no other file and no network request), from two buttons per artboard on the canvas. Both are also written into `exports/` inside the design folder.
 - `npx beziera [folder]`: creates the folder as a new, empty design folder if it does not exist yet, starts the canvas, opens it in the browser, and prints the MCP registration for Claude Code, Codex and Gemini CLI. `--write-mcp-config` merges that registration into a `.mcp.json`-shaped file directly; `--no-open` skips the automatic browser launch. Verified end to end from a clean install: packed with `npm pack`, installed into a fresh temporary `HOME` and npm cache, and run from there — including the MCP server's own `beziera-mcp` bin, confirmed against a real MCP client.
 
+### Fixed
+
+- The `/design` skill is now actually delivered to users. `npx beziera` copies the tool-neutral instructions into the root of every newly created design folder.
+- `npm test` now correctly runs the full test suite on Node 22+ (previously reported a false pass due to the runner not recursing into `dist/` subdirectories).
+- The repository status in `AGENTS.md` accurately reflects that code is implemented and tested.
+
 The MCP server has not yet been verified registered inside an actual Claude Code, Codex or Gemini CLI install — only against the MCP SDK's own client, and against `npx beziera`'s own clean-install check above. There is no release.
