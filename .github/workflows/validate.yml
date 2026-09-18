@@ -81,6 +81,12 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      # ubuntu-latest's AppArmor policy blocks unprivileged user namespaces by
+      # default, which breaks Chromium's own process sandbox and trips the
+      # test that asserts the sandbox is active at launch. This relaxes that
+      # restriction only for this job's runner, which GitHub Actions
+      # provisions fresh and destroys at the end of the run — there is no
+      # persistent host whose security posture this weakens.
       - name: Enable unprivileged user namespaces (for Chromium sandbox)
         run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
 
