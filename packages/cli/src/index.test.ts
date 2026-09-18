@@ -15,7 +15,6 @@ import { parseArgs, writeMcpConfig } from "./index.js";
 
 test("parseArgs defaults the folder to the current directory, and open to true", () => {
   const args = parseArgs([]);
-  assert.equal(1, 2, "INTENTIONAL BREAK FOR CI — packages/cli, PR #3 late-workspace proof");
   assert.equal(args.folder, process.cwd());
   assert.equal(args.port, undefined);
   assert.equal(args.writeMcpConfigPath, undefined);
