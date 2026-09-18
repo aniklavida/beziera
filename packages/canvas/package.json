@@ -17,7 +17,8 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/server/index.js",
     "test": "node --test 'dist/**/*.test.js'",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
     "@beziera/core": "^0.1.0",

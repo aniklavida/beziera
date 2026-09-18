@@ -2,7 +2,7 @@ name: Validate repository
 
 on:
   push:
-    branches: [main]
+    branches: ["**"]
   pull_request:
   workflow_dispatch:
 
@@ -56,3 +56,39 @@ jobs:
             echo "Potential credential detected."
             exit 1
           fi
+
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          # Pin Node explicitly to 22.14.0 where the silent test failure bug was observed.
+          # This ensures our CI accurately tests against a real, known-problematic Node 22.x LTS release.
+          node-version: 22.14.0
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+
+      - name: Build
+        run: npm run build
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      # ubuntu-latest's AppArmor policy blocks unprivileged user namespaces by
+      # default, which breaks Chromium's own process sandbox and trips the
+      # test that asserts the sandbox is active at launch. This relaxes that
+      # restriction only for this job's runner, which GitHub Actions
+      # provisions fresh and destroys at the end of the run — there is no
+      # persistent host whose security posture this weakens.
+      - name: Enable unprivileged user namespaces (for Chromium sandbox)
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
+      - name: Test
+        run: npm run test

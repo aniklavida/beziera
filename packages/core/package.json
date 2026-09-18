@@ -12,7 +12,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.json && node -e \"require('fs').cpSync('../../skill', 'dist/skill', {recursive: true})\"",
     "test": "node --test 'dist/**/*.test.js'",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
     "chokidar": "^5.0.0",

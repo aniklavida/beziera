@@ -16,7 +16,8 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
     "clean": "rm -rf dist",
-    "test": "node --test 'dist/**/*.test.js'"
+    "test": "node --test 'dist/**/*.test.js'",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
     "@beziera/canvas": "^0.1.0",

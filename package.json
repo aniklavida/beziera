@@ -15,6 +15,7 @@
     "canvas": "npm run start --workspace=@beziera/canvas",
     "mcp": "npm run start --workspace=@beziera/mcp",
     "cli": "npm run start --workspace=beziera",
-    "test": "npm run build && npm run test --workspace=@beziera/core && npm run test --workspace=@beziera/mcp && npm run test --workspace=@beziera/canvas && npm run test --workspace=beziera"
+    "test": "npm run build && npm run test --workspace=@beziera/core && npm run test --workspace=@beziera/mcp && npm run test --workspace=@beziera/canvas && npm run test --workspace=beziera",
+    "typecheck": "npm run typecheck --workspace=@beziera/core && npm run typecheck --workspace=@beziera/mcp && npm run typecheck --workspace=@beziera/canvas && npm run typecheck --workspace=beziera"
   }
 }
