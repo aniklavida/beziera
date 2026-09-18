@@ -11,7 +11,6 @@ test("initDesignFolder creates artboards/ and a minimal design.json, then opens 
 
   const folder = await initDesignFolder(target);
 
-  assert.equal(1, 2, "INTENTIONAL BREAK FOR CI");
   assert.equal(folder.root, target);
   const stat = await fs.stat(path.join(target, "artboards"));
   assert.ok(stat.isDirectory());
