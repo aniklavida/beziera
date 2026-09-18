@@ -90,5 +90,48 @@ jobs:
       - name: Enable unprivileged user namespaces (for Chromium sandbox)
         run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
 
-      - name: Test
-        run: npm run test
+      # Run each workspace's tests as its own step rather than the root
+      # `npm run test` script, which chains all four with `&&`. Under that
+      # chain, a failure in an earlier workspace (core) silently stops npm
+      # before a later workspace's tests (mcp, canvas, cli) ever run — so a
+      # real regression there would never show up in this job's log. Running
+      # them independently, and failing the job only after all four have had
+      # a chance to run, means every workspace's result is always visible.
+      - name: Test core
+        id: test_core
+        continue-on-error: true
+        run: npm run test --workspace=@beziera/core
+
+      - name: Test mcp
+        id: test_mcp
+        continue-on-error: true
+        run: npm run test --workspace=@beziera/mcp
+
+      - name: Test canvas
+        id: test_canvas
+        continue-on-error: true
+        run: npm run test --workspace=@beziera/canvas
+
+      - name: Test cli
+        id: test_cli
+        continue-on-error: true
+        run: npm run test --workspace=beziera
+
+      - name: Fail if any workspace's tests failed
+        if: always()
+        run: |
+          set -euo pipefail
+          failed=0
+          for outcome in \
+            "${{ steps.test_core.outcome }}" \
+            "${{ steps.test_mcp.outcome }}" \
+            "${{ steps.test_canvas.outcome }}" \
+            "${{ steps.test_cli.outcome }}"; do
+            if [ "$outcome" != "success" ]; then
+              failed=1
+            fi
+          done
+          if [ "$failed" = "1" ]; then
+            echo "One or more workspace test suites failed — see the Test steps above for exactly which."
+            exit 1
+          fi
