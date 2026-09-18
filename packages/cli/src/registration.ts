@@ -72,7 +72,10 @@ export function formatRegistrationMessage(absoluteDesignFolder: string): string 
     "Codex (config.toml):",
     toml,
     "",
-    "Then, in your agent, say something like:",
+    "The folder now contains agent instructions. In Claude Code, start with:",
+    "  /design",
+    "",
+    "Or say something like:",
     '  "Design a login screen for this app."',
   ].join("\n");
 }

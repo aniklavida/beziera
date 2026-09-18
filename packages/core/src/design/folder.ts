@@ -73,6 +73,11 @@ export async function initDesignFolder(folderPath: string, name?: string): Promi
     throw new DesignFolderError(`Refusing to initialise a design folder over an existing path: ${root}`);
   }
 
+  await fs.mkdir(root, { recursive: true });
+
+  const skillSrc = new URL('../skill', import.meta.url);
+  await fs.cp(skillSrc, root, { recursive: true });
+
   await fs.mkdir(path.join(root, ARTBOARDS_DIRNAME), { recursive: true });
   await writeDesignJson(path.join(root, DESIGN_JSON_FILENAME), {
     name: name ?? path.basename(root),

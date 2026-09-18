@@ -6,7 +6,7 @@ The canonical guide for humans and coding agents working in this repository. Too
 
 An AI-assisted UI/UX design, prototype and animation tool. It exposes a design folder over MCP so a coding agent already running on the user's machine can create and refine artboards, and it renders those artboards on a local web canvas.
 
-**Status: pre-implementation.** The specification, architecture and structure exist. Working code does not yet.
+**Status:** Implemented and tested.
 
 ## The one rule that matters
 

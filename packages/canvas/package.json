@@ -16,7 +16,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "start": "node dist/server/index.js",
-    "test": "node --test dist",
+    "test": "node --test 'dist/**/*.test.js'",
     "clean": "rm -rf dist"
   },
   "dependencies": {
@@ -24,9 +24,9 @@
     "ws": "^8.21.3"
   },
   "devDependencies": {
-    "typescript": "^7.0.2",
     "@types/node": "^22.20.2",
     "@types/ws": "^8.18.1",
-    "playwright": "^1.63.0"
+    "playwright": "^1.63.0",
+    "typescript": "^7.0.2"
   }
 }
