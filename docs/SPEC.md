@@ -208,7 +208,7 @@ Stated here and in the README, and not to be quietly softened elsewhere.
 
 **A headless browser is a heavy dependency.** Large install, a process to manage, and a security surface. If it fails to install, `screenshot_artboard` fails — and that tool is the product.
 
-**The name is not legally cleared.** It is available where it was checked; formal trademark clearance is outstanding.
+**The name is confirmed as final** (23 Sep 2026). It is available where it was checked — npm, GitHub namespace, Homebrew — and an informal search found no exact trademark match, though the four official registries (USPTO/EUIPO/WIPO/UK IPO) were not directly queryable and a formal clearance search was not run.
 
 ## 19 · v1 acceptance
 
