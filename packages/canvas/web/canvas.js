@@ -90,6 +90,20 @@ window.addEventListener("mouseup", () => {
 
 /** Reconcile the DOM with a fresh design.json: add, move/resize and remove artboards. */
 export function renderArtboards(design) {
+  const titleEl = document.getElementById("canvas-title");
+  if (titleEl && design.name) {
+    titleEl.textContent = design.name;
+  }
+
+  const emptyEl = document.getElementById("canvas-empty");
+  if (emptyEl) {
+    if (!design.artboards || design.artboards.length === 0) {
+      emptyEl.removeAttribute("hidden");
+    } else {
+      emptyEl.setAttribute("hidden", "");
+    }
+  }
+
   const seen = new Set();
   for (const artboard of design.artboards) {
     seen.add(artboard.id);
@@ -196,16 +210,74 @@ function connectSocket() {
 
 let marks;
 
+function initThemeToggle() {
+  const toggleBtn = document.getElementById("theme-toggle");
+  if (!toggleBtn) return;
+
+  function updateToggleText() {
+    const current = document.documentElement.getAttribute("data-theme") || "dark";
+    toggleBtn.textContent = current === "dark" ? "Light theme" : "Dark theme";
+  }
+
+  updateToggleText();
+
+  toggleBtn.addEventListener("click", () => {
+    try {
+      const current = document.documentElement.getAttribute("data-theme") || "dark";
+      const next = current === "dark" ? "light" : "dark";
+      document.documentElement.setAttribute("data-theme", next);
+      localStorage.setItem("beziera-theme", next);
+      updateToggleText();
+    } catch {
+      // localStorage may be disabled in restricted environments
+    }
+  });
+}
+
+function initCommandDetails() {
+  const details = document.getElementById("command-details");
+  if (!details) return;
+  const updateDetails = () => {
+    if (window.innerWidth < 640) {
+      details.open = false;
+    }
+  };
+  updateDetails();
+  window.addEventListener("resize", updateDetails);
+}
+
+function showError(err) {
+  console.error(err);
+  const errorEl = document.getElementById("canvas-error");
+  const msgEl = document.getElementById("canvas-error-message");
+  const retryBtn = document.getElementById("canvas-error-retry");
+  if (errorEl && msgEl) {
+    msgEl.textContent = String(err.message || err);
+    errorEl.removeAttribute("hidden");
+    retryBtn?.addEventListener(
+      "click",
+      () => {
+        errorEl.setAttribute("hidden", "");
+        main().catch(showError);
+      },
+      { once: true }
+    );
+  } else {
+    document.body.innerHTML = `<pre style="padding:24px;color:#b00020">${String(err)}</pre>`;
+  }
+}
+
 async function main() {
+  initThemeToggle();
+  initCommandDetails();
   applyTransform();
   const design = await loadDesign();
   renderArtboards(design);
-  marks = initMarks({ getArtboardEntries, worldToScreen });
+  if (!marks) {
+    marks = initMarks({ getArtboardEntries, worldToScreen });
+  }
   initCommandPanel();
   connectSocket();
 }
 
-main().catch((err) => {
-  console.error(err);
-  document.body.innerHTML = `<pre style="padding:24px;color:#b00020">${String(err)}</pre>`;
-});
+main().catch(showError);

@@ -18,7 +18,7 @@
   var markModeEnabled = false;
   var hoverEl = null;
   var hoverPrevOutline = "";
-  var HOVER_OUTLINE = "2px solid #6d5efc";
+  var HOVER_OUTLINE = "2px solid oklch(0.68 0.12 290)";
 
   function clearHover() {
     if (hoverEl) {
