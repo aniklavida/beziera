@@ -71,8 +71,15 @@ export function initMarks({ getArtboardEntries, worldToScreen }) {
     label.textContent = element.tag + (element.id ? `#${element.id}` : "");
     popover.appendChild(label);
 
+    const inputLabel = document.createElement("label");
+    inputLabel.className = "mark-input-label";
+    inputLabel.htmlFor = "mark-comment-input";
+    inputLabel.textContent = "Note for agent";
+    popover.appendChild(inputLabel);
+
     const textarea = document.createElement("textarea");
-    textarea.placeholder = "What's wrong here?";
+    textarea.id = "mark-comment-input";
+    textarea.placeholder = "Describe what needs changing";
     popover.appendChild(textarea);
 
     const actions = document.createElement("div");
@@ -80,11 +87,13 @@ export function initMarks({ getArtboardEntries, worldToScreen }) {
 
     const cancelBtn = document.createElement("button");
     cancelBtn.type = "button";
+    cancelBtn.className = "btn-secondary";
     cancelBtn.textContent = "Cancel";
     cancelBtn.addEventListener("click", () => closePopover());
 
     const submitBtn = document.createElement("button");
     submitBtn.type = "button";
+    submitBtn.className = "btn-primary";
     submitBtn.textContent = "Leave mark";
     submitBtn.addEventListener("click", () => submitMark(artboardId, element, textarea.value));
 

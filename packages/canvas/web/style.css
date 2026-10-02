@@ -1,37 +1,146 @@
+/* ==========================================================================
+   Beziera Canvas Design Tokens
+   Derived from the project's design system.
+   - BRAND block configured for Beziera: creative canvas, dark default.
+   - System type pairing: no external font files or font imports.
+   ========================================================================== */
+
+/* ---------- BRAND (the only block a new brand edits) ---------- */
 :root {
-  color-scheme: light dark;
-  --bg: #e7e7ea;
-  --grid-dot: #c7c7cf;
-  --label: #4a4a52;
-  --label-bg: rgba(255, 255, 255, 0.85);
+  --brand-h: 290;          /* hue 0-360: violet */
+  --brand-c: 0.12;         /* chroma 0-0.3 */
+  --brand-l: 0.58;         /* lightness of the accent in light mode */
+  --brand-l-dark: 0.68;    /* lightness of the accent in dark mode */
+  --warmth: 0.008;         /* chroma of neutrals */
+  --neutral-h: var(--brand-h); /* neutrals lean toward the brand hue */
+  --radius-scale: 0.8;     /* compact, precise creative tool radius */
+  --density: 1;            /* 0.9 compact … 1.1 comfortable */
+  --font-display: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-ui: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #1b1b1f;
-    --grid-dot: #2e2e35;
-    --label: #c9c9d1;
-    --label-bg: rgba(30, 30, 34, 0.85);
-  }
+/* ---------- DERIVED COLOR (do not edit per brand) ---------- */
+:root, [data-theme="light"] {
+  color-scheme: light;
+  --bg:      oklch(0.985 var(--warmth) var(--neutral-h));
+  --rail:    oklch(0.955 calc(var(--warmth) * 1.2) var(--neutral-h));
+  --surf:    oklch(0.995 calc(var(--warmth) * 0.5) var(--neutral-h));
+  --subtle:  oklch(0.97  var(--warmth) var(--neutral-h));
+  --bd:      oklch(0.90  var(--warmth) var(--neutral-h));
+  --bd2:     oklch(0.85  var(--warmth) var(--neutral-h));
+  --line:    oklch(0.94  var(--warmth) var(--neutral-h));
+  --act:     oklch(0.92  calc(var(--warmth) * 1.5) var(--neutral-h));
+  --hov:     oklch(0.94  var(--warmth) var(--neutral-h));
+  --chip:    oklch(0.88  var(--warmth) var(--neutral-h));
+  --ink:     oklch(0.22  calc(var(--warmth) * 0.8) var(--neutral-h));
+  --ink2:    oklch(0.32  calc(var(--warmth) * 0.8) var(--neutral-h));
+  --mut:     oklch(0.48  var(--warmth) var(--neutral-h));
+  --faint:   oklch(0.62  var(--warmth) var(--neutral-h));
+  --acc:     oklch(var(--brand-l) var(--brand-c) var(--brand-h));
+  --acc2:    oklch(calc(var(--brand-l) - 0.1) var(--brand-c) var(--brand-h));
+  --accbg:   oklch(0.95 calc(var(--brand-c) * 0.3) var(--brand-h));
+  --on-acc:  #ffffff;
+  --ok:      oklch(0.55 0.12 150);  --okbg:   oklch(0.95 0.04 150);
+  --warn:    oklch(0.62 0.13 75);   --warnbg: oklch(0.96 0.05 75);
+  --bad:     oklch(0.55 0.16 25);   --badbg:  oklch(0.95 0.04 25);
+  --info:    oklch(0.55 0.10 240);  --infobg: oklch(0.95 0.03 240);
+  --backdrop: rgba(0,0,0,0.30);
+  --shadow-menu:  0 12px 32px rgba(0,0,0,0.12);
+  --shadow-modal: 0 24px 60px rgba(0,0,0,0.18);
+  --shadow-card:  0 1px 2px rgba(0,0,0,0.04);
+  --chart-1: var(--acc); --chart-2: oklch(0.6 0.09 calc(var(--brand-h) + 150)); --chart-3: oklch(0.6 0.09 calc(var(--brand-h) + 60)); --chart-4: oklch(0.6 0.08 calc(var(--brand-h) + 240)); --chart-5: oklch(0.55 0.02 var(--neutral-h));
+}
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg:      oklch(0.17 var(--warmth) var(--neutral-h));
+  --rail:    oklch(0.20 var(--warmth) var(--neutral-h));
+  --surf:    oklch(0.22 var(--warmth) var(--neutral-h));
+  --subtle:  oklch(0.26 var(--warmth) var(--neutral-h));
+  --bd:      oklch(0.31 var(--warmth) var(--neutral-h));
+  --bd2:     oklch(0.37 var(--warmth) var(--neutral-h));
+  --line:    oklch(0.28 var(--warmth) var(--neutral-h));
+  --act:     oklch(0.32 calc(var(--warmth) * 1.5) var(--neutral-h));
+  --hov:     oklch(0.27 var(--warmth) var(--neutral-h));
+  --chip:    oklch(0.32 var(--warmth) var(--neutral-h));
+  --ink:     oklch(0.93 calc(var(--warmth) * 0.6) var(--neutral-h));
+  --ink2:    oklch(0.85 calc(var(--warmth) * 0.6) var(--neutral-h));
+  --mut:     oklch(0.72 var(--warmth) var(--neutral-h));
+  --faint:   oklch(0.58 var(--warmth) var(--neutral-h));
+  --acc:     oklch(var(--brand-l-dark) var(--brand-c) var(--brand-h));
+  --acc2:    oklch(calc(var(--brand-l-dark) + 0.08) var(--brand-c) var(--brand-h));
+  --accbg:   oklch(0.30 calc(var(--brand-c) * 0.4) var(--brand-h));
+  --on-acc:  #ffffff;
+  --ok:      oklch(0.75 0.12 150);  --okbg:   oklch(0.28 0.04 150);
+  --warn:    oklch(0.80 0.12 80);   --warnbg: oklch(0.30 0.05 80);
+  --bad:     oklch(0.72 0.14 25);   --badbg:  oklch(0.30 0.05 25);
+  --info:    oklch(0.75 0.09 240);  --infobg: oklch(0.28 0.04 240);
+  --backdrop: rgba(0,0,0,0.5);
+  --shadow-menu:  0 14px 36px rgba(0,0,0,0.35);
+  --shadow-modal: 0 24px 60px rgba(0,0,0,0.5);
+  --shadow-card:  none;
 }
 
-* {
-  box-sizing: border-box;
+/* ---------- SCALE ---------- */
+:root {
+  --fs-xs: 11px; --fs-sm: 12px; --fs-base: 14px; --fs-md: 16px; --fs-lg: 20px; --fs-xl: 24px; --fs-2xl: 32px; --fs-3xl: 40px; --fs-4xl: 56px;
+  --lh-tight: 1.15; --lh: 1.45; --lh-loose: 1.6;
+  --sp-1: calc(4px * var(--density)); --sp-2: calc(8px * var(--density)); --sp-3: calc(12px * var(--density)); --sp-4: calc(16px * var(--density)); --sp-5: calc(20px * var(--density)); --sp-6: calc(24px * var(--density)); --sp-8: calc(32px * var(--density)); --sp-10: calc(40px * var(--density)); --sp-12: calc(48px * var(--density));
+  --r-xs: calc(4px * var(--radius-scale)); --r-sm: calc(7px * var(--radius-scale)); --r-md: calc(10px * var(--radius-scale)); --r-lg: calc(14px * var(--radius-scale)); --r-xl: calc(18px * var(--radius-scale)); --r-pill: 999px;
+  --h-xs: 28px; --h-sm: 32px; --h-md: 36px; --h-lg: 40px; --h-xl: 48px;
+  --ease: cubic-bezier(.2,.7,.2,1); --t-fast: 120ms; --t: 180ms; --t-slow: 280ms;
+  --bp-mobile: 640px; --bp-tablet: 900px; --bp-desktop: 1200px; --bp-wide: 1600px;
+}
+/* ---------- MOBILE ---------- */
+:root {
+  --m-safe-top: env(safe-area-inset-top, 0px); --m-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --m-nav: 44px; --m-large-title: 52px; --m-tab: 49px; --m-cell: 52px; --m-cell-2: 64px;
+  --m-input: 48px; --m-btn: 50px; --m-margin: 16px; --m-sheet-r: 20px; --m-fab: 56px; --m-target: 48px;
+  --m-fs-body: 16px; --m-fs-title: 34px; --m-fs-nav: 17px;
 }
 
 html,
 body {
-  margin: 0;
+  width: 100%;
   height: 100%;
+  margin: 0;
   overflow: hidden;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: var(--fs-base);
+  line-height: var(--lh);
+  -webkit-font-smoothing: antialiased;
 }
 
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+a {
+  color: var(--acc);
+  text-decoration: none;
+}
+a:hover {
+  color: var(--acc2);
+}
+
+::placeholder {
+  color: var(--faint);
+}
+
+/* ==========================================================================
+   Canvas Shell Layout & App Chrome
+   ========================================================================== */
+
+/* Canvas Viewport */
 #viewport {
   position: absolute;
   inset: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   background-color: var(--bg);
-  background-image: radial-gradient(var(--grid-dot) 1px, transparent 1px);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='1' fill='%23888888' fill-opacity='0.2'/%3E%3C/svg%3E");
   background-size: 24px 24px;
   cursor: grab;
 }
@@ -48,9 +157,7 @@ body {
   will-change: transform;
 }
 
-/* 1x1 with overflow visible: draws in #world's own coordinate space (the
-   same x/y pixels design.json uses) without needing a viewBox or a size
-   that would have to track the canvas's actual extent. */
+/* Prototype links layer */
 #links-layer {
   position: absolute;
   top: 0;
@@ -62,30 +169,27 @@ body {
 }
 
 .link-line {
-  stroke: #6d5efc;
+  stroke: var(--acc);
   stroke-width: 2;
 }
 
 #link-arrow path {
-  fill: #6d5efc;
+  fill: var(--acc);
 }
 
+/* Artboard container */
 .artboard {
   position: absolute;
-  background: #fff;
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.25),
-    0 12px 30px rgba(0, 0, 0, 0.12);
-  border-radius: 6px;
+  background: var(--surf);
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--bd);
+  border-radius: var(--r-md);
 }
 
-/* Clips the iframe to the artboard's rounded corners. This lives on its own
-   wrapper rather than on .artboard itself, so .artboard can stay unclipped
-   for the toolbar, which sits above the box at a negative offset. */
 .artboard-frame {
   position: absolute;
   inset: 0;
-  border-radius: 6px;
+  border-radius: var(--r-md);
   overflow: hidden;
 }
 
@@ -94,182 +198,589 @@ body {
   height: 100%;
   border: 0;
   display: block;
-  background: #fff;
+  background: #ffffff;
 }
 
+/* Artboard top toolbar */
 .artboard .artboard-toolbar {
   position: absolute;
-  top: -28px;
+  top: -30px;
   left: 0;
   right: 0;
+  height: 26px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: var(--sp-2);
   pointer-events: none;
 }
 
 .artboard .artboard-label {
-  font-size: 12px;
-  color: var(--label);
-  background: var(--label-bg);
+  font-family: var(--font-ui);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--mut);
+  background: var(--surf);
+  border: 1px solid var(--bd);
   padding: 2px 8px;
-  border-radius: 4px;
+  border-radius: var(--r-xs);
   white-space: nowrap;
   pointer-events: none;
 }
 
 .artboard .artboard-replay {
   pointer-events: auto;
-  font: 11px -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-ui);
+  font-size: var(--fs-xs);
+  font-weight: 500;
   padding: 2px 8px;
-  border-radius: 4px;
-  border: 1px solid var(--grid-dot);
-  background: var(--label-bg);
-  color: var(--label);
+  border-radius: var(--r-xs);
+  border: 1px solid var(--bd);
+  background: var(--surf);
+  color: var(--ink);
   cursor: pointer;
+  min-height: 24px;
+  white-space: nowrap;
+  transition: background var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
+}
+
+.artboard .artboard-replay:hover {
+  background: var(--hov);
+  border-color: var(--bd2);
+}
+
+.artboard .artboard-replay:focus-visible {
+  outline: 2px solid var(--acc);
+  outline-offset: 2px;
 }
 
 .artboard .artboard-actions {
   pointer-events: none;
   display: flex;
-  gap: 4px;
+  gap: var(--sp-1);
 }
 
 .artboard .artboard-export {
   pointer-events: auto;
-  font: 11px -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-ui);
+  font-size: var(--fs-xs);
+  font-weight: 500;
   padding: 2px 8px;
-  border-radius: 4px;
-  border: 1px solid var(--grid-dot);
-  background: var(--label-bg);
-  color: var(--label);
+  border-radius: var(--r-xs);
+  border: 1px solid var(--bd);
+  background: var(--surf);
+  color: var(--ink);
   text-decoration: none;
   cursor: pointer;
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  transition: background var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
 }
 
+.artboard .artboard-export:hover {
+  background: var(--hov);
+  border-color: var(--bd2);
+}
+
+.artboard .artboard-export:focus-visible {
+  outline: 2px solid var(--acc);
+  outline-offset: 2px;
+}
+
+/* Canvas Hint */
 #hint {
   position: fixed;
-  left: 12px;
-  bottom: 12px;
-  font: 12px -apple-system, BlinkMacSystemFont, sans-serif;
-  color: var(--label);
-  background: var(--label-bg);
-  padding: 6px 10px;
-  border-radius: 6px;
+  left: var(--sp-3);
+  bottom: var(--sp-3);
+  font-family: var(--font-ui);
+  font-size: var(--fs-xs);
+  color: var(--mut);
+  background: var(--surf);
+  border: 1px solid var(--bd);
+  padding: 6px 12px;
+  border-radius: var(--r-sm);
   pointer-events: none;
+  z-index: 80;
+  max-width: calc(100vw - 24px);
+  white-space: normal;
+  line-height: var(--lh);
 }
 
+/* Marks and Chrome panel */
 #marks-panel {
   position: fixed;
-  right: 12px;
-  top: 12px;
+  right: var(--sp-3);
+  top: var(--sp-3);
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  font: 12px -apple-system, BlinkMacSystemFont, sans-serif;
-  color: var(--label);
-  max-width: 320px;
+  gap: var(--sp-2);
+  font-family: var(--font-ui);
+  font-size: var(--fs-xs);
+  color: var(--ink);
+  width: 320px;
+  max-width: calc(100vw - 24px);
+  z-index: 90;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  background: var(--surf);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-md);
+  border: 1px solid var(--bd);
+  box-shadow: var(--shadow-card);
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  min-width: 0;
+  flex: 1;
+}
+
+.brand-wordmark {
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.header-divider {
+  color: var(--line);
+  font-size: var(--fs-sm);
+  user-select: none;
+}
+
+.header-doc-name {
+  font-size: var(--fs-xs);
+  color: var(--mut);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+#theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  min-width: 44px;
+  padding: 4px 10px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--bd);
+  background: var(--subtle);
+  color: var(--mut);
+  font-family: var(--font-ui);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
+}
+
+#theme-toggle:hover {
+  background: var(--hov);
+  color: var(--ink);
+  border-color: var(--bd2);
+}
+
+#theme-toggle:focus-visible {
+  outline: 2px solid var(--acc);
+  outline-offset: 2px;
 }
 
 #marks-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  background: var(--label-bg);
-  padding: 8px 10px;
-  border-radius: 6px;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  background: var(--surf);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-md);
+  border: 1px solid var(--bd);
+  box-shadow: var(--shadow-card);
 }
 
 #mark-toggle {
-  font: inherit;
+  font-family: var(--font-ui);
+  font-size: var(--fs-xs);
+  font-weight: 500;
   padding: 6px 12px;
-  border: 1px solid var(--grid-dot);
-  border-radius: 5px;
-  background: #fff;
+  border: 1px solid var(--bd);
+  border-radius: var(--r-sm);
+  background: var(--subtle);
+  color: var(--ink);
   cursor: pointer;
+  min-height: 32px;
+  min-width: 44px;
+  white-space: nowrap;
+  transition: background var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+}
+
+#mark-toggle:hover {
+  background: var(--hov);
+  border-color: var(--bd2);
 }
 
 #mark-toggle.active {
-  background: #6d5efc;
-  color: #fff;
-  border-color: #6d5efc;
+  background: var(--acc);
+  color: var(--on-acc);
+  border-color: var(--acc2);
+}
+
+#mark-toggle:focus-visible {
+  outline: 2px solid var(--acc);
+  outline-offset: 2px;
+}
+
+#marks-pending-count {
+  font-size: var(--fs-xs);
+  color: var(--mut);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.command-details {
+  background: var(--surf);
+  border-radius: var(--r-md);
+  border: 1px solid var(--bd);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.command-summary {
+  padding: var(--sp-2) var(--sp-3);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--ink2);
+  cursor: pointer;
+  user-select: none;
+}
+
+.command-details[open] .command-summary {
+  border-bottom: 1px solid var(--line);
 }
 
 #command-box {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  background: var(--label-bg);
-  padding: 10px;
-  border-radius: 6px;
-}
-
-#command-box .panel-label {
-  font-weight: 600;
+  gap: var(--sp-2);
+  padding: var(--sp-3);
+  background: var(--surf);
 }
 
 #command-text {
   display: block;
   white-space: normal;
   word-break: break-word;
-  background: rgba(0, 0, 0, 0.06);
+  background: var(--subtle);
+  color: var(--ink);
   padding: 6px 8px;
-  border-radius: 4px;
-  font: 11px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+  border-radius: var(--r-xs);
+  border: 1px solid var(--line);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  line-height: var(--lh);
 }
 
 #command-copy {
   align-self: flex-start;
-  font: inherit;
+  font-family: var(--font-ui);
+  font-size: var(--fs-xs);
+  font-weight: 500;
   padding: 4px 10px;
-  border: 1px solid var(--grid-dot);
-  border-radius: 5px;
-  background: #fff;
+  border: 1px solid var(--bd);
+  border-radius: var(--r-sm);
+  background: var(--subtle);
+  color: var(--ink);
   cursor: pointer;
+  min-height: 28px;
+  min-width: 44px;
+  white-space: nowrap;
+  transition: background var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
 }
 
+#command-copy:hover {
+  background: var(--hov);
+  border-color: var(--bd2);
+}
+
+#command-copy:focus-visible {
+  outline: 2px solid var(--acc);
+  outline-offset: 2px;
+}
+
+/* Mark Popover */
 .mark-popover {
   position: fixed;
   z-index: 1000;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  width: 220px;
-  background: #fff;
-  color: #1a1a1a;
-  border-radius: 8px;
-  padding: 10px;
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.25),
-    0 12px 30px rgba(0, 0, 0, 0.18);
+  gap: var(--sp-2);
+  width: 260px;
+  max-width: calc(100vw - 32px);
+  background: var(--surf);
+  color: var(--ink);
+  border-radius: var(--r-lg);
+  border: 1px solid var(--bd);
+  padding: var(--sp-3);
+  box-shadow: var(--shadow-modal);
 }
 
 .mark-popover-label {
-  font: 11px ui-monospace, SFMono-Regular, Menlo, monospace;
-  color: #6b7280;
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--mut);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mark-input-label {
+  font-family: var(--font-ui);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--mut);
+  display: block;
 }
 
 .mark-popover textarea {
   width: 100%;
-  min-height: 60px;
+  min-height: 64px;
   resize: vertical;
-  font: 12px -apple-system, BlinkMacSystemFont, sans-serif;
-  padding: 6px;
+  font-family: var(--font-ui);
+  font-size: var(--fs-sm);
+  line-height: var(--lh);
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--bd);
+  border-radius: var(--r-sm);
+  padding: var(--sp-2);
   box-sizing: border-box;
+}
+
+.mark-popover textarea:focus {
+  outline: 2px solid var(--acc);
+  outline-offset: 1px;
+  border-color: var(--acc);
 }
 
 .mark-popover-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 6px;
+  gap: var(--sp-2);
 }
 
 .mark-popover-actions button {
-  font: 12px -apple-system, BlinkMacSystemFont, sans-serif;
-  padding: 4px 10px;
-  border-radius: 5px;
-  border: 1px solid #d1d5db;
-  background: #f3f4f6;
+  font-family: var(--font-ui);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: var(--r-sm);
   cursor: pointer;
+  min-height: 32px;
+  min-width: 44px;
+  white-space: nowrap;
+  transition: background var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
+}
+
+.mark-popover-actions .btn-secondary {
+  border: 1px solid var(--bd);
+  background: var(--subtle);
+  color: var(--ink);
+}
+
+.mark-popover-actions .btn-secondary:hover {
+  background: var(--hov);
+  border-color: var(--bd2);
+}
+
+.mark-popover-actions .btn-primary {
+  border: 1px solid var(--acc2);
+  background: var(--acc);
+  color: var(--on-acc);
+}
+
+.mark-popover-actions .btn-primary:hover {
+  background: var(--acc2);
+}
+
+.mark-popover-actions button:focus-visible {
+  outline: 2px solid var(--acc);
+  outline-offset: 2px;
+}
+
+/* Empty State */
+.canvas-empty-state {
+  display: none;
+}
+
+.canvas-empty-state:not([hidden]) {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  z-index: 10;
+}
+
+.empty-state-card {
+  background: var(--surf);
+  border: 1px solid var(--bd);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-menu);
+  padding: var(--sp-6);
+  max-width: 380px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.empty-state-badge {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--mut);
+  background: var(--subtle);
+  border: 1px solid var(--bd);
+  padding: 2px 8px;
+  border-radius: var(--r-xs);
+}
+
+.empty-state-title {
+  margin: var(--sp-1) 0 0 0;
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.empty-state-text {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--mut);
+  line-height: var(--lh);
+}
+
+.empty-state-code {
+  margin-top: var(--sp-2);
+  background: var(--subtle);
+  border: 1px solid var(--line);
+  border-radius: var(--r-xs);
+  padding: 6px 12px;
+}
+
+.empty-state-code code {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--ink2);
+}
+
+/* Error State */
+.canvas-error-state {
+  display: none;
+}
+
+.canvas-error-state:not([hidden]) {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--backdrop);
+  z-index: 150;
+  padding: var(--sp-4);
+}
+
+.error-state-card {
+  background: var(--surf);
+  border: 1px solid var(--bad);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-modal);
+  padding: var(--sp-6);
+  max-width: 420px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.error-state-title {
+  margin: 0;
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  color: var(--bad);
+}
+
+.error-state-text {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--ink);
+  line-height: var(--lh);
+  word-break: break-word;
+}
+
+.error-state-card .btn-primary {
+  align-self: flex-start;
+  font-family: var(--font-ui);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  padding: 6px 16px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--acc2);
+  background: var(--acc);
+  color: var(--on-acc);
+  cursor: pointer;
+  min-height: 32px;
+  min-width: 44px;
+  white-space: nowrap;
+}
+
+.error-state-card .btn-primary:focus-visible {
+  outline: 2px solid var(--acc);
+  outline-offset: 2px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 899px) {
+  #theme-toggle,
+  #mark-toggle,
+  #command-copy,
+  .mark-popover-actions button,
+  .error-state-card .btn-primary {
+    min-height: 40px;
+  }
+}
+
+@media (max-width: 639px) {
+  #marks-panel {
+    right: var(--sp-2);
+    left: var(--sp-2);
+    width: auto;
+    max-width: none;
+    top: var(--sp-2);
+  }
+  #hint {
+    left: var(--sp-2);
+    right: var(--sp-2);
+    max-width: none;
+    bottom: var(--sp-2);
+    font-size: 10px;
+  }
 }

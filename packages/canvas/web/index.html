@@ -1,9 +1,22 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Beziera</title>
+<script>
+  (function () {
+    try {
+      var saved = localStorage.getItem("beziera-theme");
+      if (saved === "light" || saved === "dark") {
+        document.documentElement.setAttribute("data-theme", saved);
+        return;
+      }
+    } catch (e) {}
+    var prefersLight = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches;
+    document.documentElement.setAttribute("data-theme", prefersLight ? "light" : "dark");
+  })();
+</script>
 <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
@@ -17,19 +30,46 @@
       </defs>
       <g id="links-group"></g>
     </svg>
+    <div id="canvas-empty" class="canvas-empty-state" hidden>
+      <div class="empty-state-card">
+        <span class="empty-state-badge">Empty canvas</span>
+        <h2 class="empty-state-title">No artboards found</h2>
+        <p class="empty-state-text">Ask your agent to create an artboard to view your design on the canvas.</p>
+        <div class="empty-state-code">
+          <code>create_artboard</code>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
-<div id="hint">Scroll to pan &middot; Ctrl/Cmd+scroll or pinch to zoom &middot; drag empty space to pan</div>
+<div id="canvas-error" class="canvas-error-state" hidden>
+  <div class="error-state-card">
+    <h2 class="error-state-title">Unable to load design</h2>
+    <p id="canvas-error-message" class="error-state-text">Failed to connect to the canvas server.</p>
+    <button id="canvas-error-retry" class="btn-primary" type="button">Retry</button>
+  </div>
+</div>
+<div id="hint">Scroll to pan &middot; Zoom with ⌘/Ctrl+scroll or pinch &middot; Drag empty space to pan</div>
 <div id="marks-panel">
+  <div class="panel-header">
+    <div class="header-brand">
+      <span class="brand-wordmark">Beziera</span>
+      <span class="header-divider" aria-hidden="true">/</span>
+      <span id="canvas-title" class="header-doc-name">Canvas</span>
+    </div>
+    <button id="theme-toggle" type="button" aria-label="Toggle visual theme">Light theme</button>
+  </div>
   <div id="marks-row">
     <button id="mark-toggle" type="button">Leave a mark</button>
     <span id="marks-pending-count"></span>
   </div>
-  <div id="command-box">
-    <span class="panel-label">Paste this in your agent to act on pending marks</span>
-    <code id="command-text"></code>
-    <button id="command-copy" type="button">Copy</button>
-  </div>
+  <details id="command-details" class="command-details" open>
+    <summary class="panel-label command-summary">Agent command</summary>
+    <div id="command-box">
+      <code id="command-text"></code>
+      <button id="command-copy" type="button">Copy</button>
+    </div>
+  </details>
 </div>
 <script type="module" src="/canvas.js"></script>
 </body>
